@@ -35,7 +35,7 @@ public:
 	BitHolder& getHolderAt(const int x, const int y) override { return m_Grid[x * BoardSize + y]; }
 
 private:
-	Bit* PieceForPlayer(const int playerNumber, const std::string_view texture);
+	Bit* PieceForPlayer(const int playerNumber, const char tag, const std::string_view texture);
 	Player* ownerAt(int index);
 	void    scanForMouse();
 	std::array<ChessSquare, NumberOfSquares> m_Grid;

@@ -45,7 +45,7 @@ public:
 	bool friendly();
 	bool unfriendly();
 	// game defined game tags
-	const int gameTag() { return _gameTag; };
+	const int gameTag() const { return _gameTag; };
 	void setGameTag(int tag) { _gameTag = tag; };
 	// move to a position
 	void moveTo(const ImVec2& point);
