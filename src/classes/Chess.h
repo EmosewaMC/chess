@@ -1,17 +1,23 @@
-#pragma once
+#ifndef __CHESS__H__
+#define __CHESS__H__
+
+#include <array>
+
 #include "Game.h"
-#include "Square.h"
+#include "ChessSquare.h"
 
 //
 // the classic game of Rock, Paper, Scissors
 //
 const int pieceSize = 100;
 
-class RockPaperScissors : public Game
+class Chess : public Game
 {
 public:
-	RockPaperScissors();
-	~RockPaperScissors();
+	static constexpr int BoardSize = 8;
+	static constexpr int NumberOfSquares = BoardSize * BoardSize;
+	Chess();
+	~Chess();
 
 	// set up the board
 	void setUpBoard() override;
@@ -26,12 +32,13 @@ public:
 	bool canBitMoveFrom(Bit& bit, BitHolder& src) override;
 	bool canBitMoveFromTo(Bit& bit, BitHolder& src, BitHolder& dst) override;
 	void stopGame() override;
-	BitHolder& getHolderAt(const int x, const int y) override { return _grid[x]; }
+	BitHolder& getHolderAt(const int x, const int y) override { return m_Grid[x * BoardSize + y]; }
 
 private:
-	Bit* PieceForPlayer(const int playerNumber);
+	Bit* PieceForPlayer(const int playerNumber, const std::string_view texture);
 	Player* ownerAt(int index);
 	void    scanForMouse();
-	Square   _grid[2];
+	std::array<ChessSquare, NumberOfSquares> m_Grid;
 };
 
+#endif  //!__CHESS__H__

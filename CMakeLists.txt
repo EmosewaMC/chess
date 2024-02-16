@@ -43,7 +43,7 @@ else()
 	set(IMPL_FILE "src/imgui/imgui_impl_win32.cpp")
 endif()
 
-add_executable(tictactoe
+add_executable(chess
 	src/Application.cpp
 	src/imgui/imgui_demo.cpp
 	src/imgui/imgui_draw.cpp
@@ -55,21 +55,23 @@ add_executable(tictactoe
 	src/classes/BitHolder.cpp
 	src/classes/ChessSquare.cpp
 	src/classes/Game.cpp
-	src/classes/RockPaperScissors.cpp
+	src/classes/Chess.cpp
 	src/classes/Sprite.cpp
 	src/classes/Square.cpp
+	src/Logger.cpp
 	${MAIN_FILE}
 	${IMPL_FILE}
 )
 
-target_compile_options(tictactoe PRIVATE "/W4")
+target_include_directories(chess PRIVATE src)
+
+target_compile_options(chess PRIVATE "/W4")
+
+target_link_libraries(chess ${OPENGL_gl_LIBRARY})
 
 if(MACOS)
-	target_link_libraries(tictactoe ${OPENGL_gl_LIBRARY} glfw)
-else()
-	target_link_libraries(tictactoe ${OPENGL_gl_LIBRARY})
-endif(
-)
+	target_link_libraries(chess glfw)
+endif()
 
 set(CPACK_PROJECT_NAME ${PROJECT_NAME})
 set(CPACK_PROJECT_VERSION ${PROJECT_VERSION})

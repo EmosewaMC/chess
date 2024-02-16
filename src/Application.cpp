@@ -1,12 +1,19 @@
 #include "Application.h"
 #include "imgui/imgui.h"
-#include "classes/RockPaperScissors.h"
+#include "classes/Chess.h"
+
+#include "Logger.h"
+#include "GameGlobal.h"
+
+namespace GameGlobal {
+	std::unique_ptr<Logger> logger = nullptr;
+};
 
 namespace ClassGame {
 	//
 	// our global variables
 	//
-	RockPaperScissors* game = nullptr;
+	Chess* game = nullptr;
 	int gameWinner = -1;
 
 	//
@@ -14,7 +21,9 @@ namespace ClassGame {
 	// this is called by the main render loop in main.cpp
 	//
 	void GameStartUp() {
-		game = new RockPaperScissors();
+		game = new Chess();
+		GameGlobal::logger = std::make_unique<Logger>("Chess_" + std::to_string(time(0)) + ".log");
+		LOG("Started up game", LogLevel::INFO);
 		game->setUpBoard();
 		gameWinner = -1;
 	}
@@ -24,6 +33,7 @@ namespace ClassGame {
 	// this is called by the main render loop in main.cpp
 	//
 	void RenderGame() {
+		GameGlobal::logger->Flush();
 		ImGui::DockSpaceOverViewport(ImGui::GetMainViewport());
 
 		ImGui::Begin("Settings");
@@ -44,7 +54,6 @@ namespace ClassGame {
 			gameWinner = -1;
 		}
 		ImGui::End();
-
 		if (game->gameHasAI() && game->getCurrentPlayer()->isAIPlayer()) {
 			game->updateAI();
 		}

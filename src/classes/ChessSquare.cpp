@@ -1,13 +1,13 @@
 #include "ChessSquare.h"
-// #include "Chess.h"
+#include "Chess.h"
 
 void ChessSquare::initHolder(const ImVec2& position, const char* spriteName, const int column, const int row) {
 	_column = column;
 	_row = row;
 	int odd = (column + row) % 2;
-	ImVec4 color = odd ? ImVec4(0.93, 0.93, 0.84, 1.0) : ImVec4(0.48, 0.58, 0.36, 1.0);
+	ImVec4 color = odd ? ImVec4(0.48, 0.58, 0.36, 1.0) : ImVec4(0.93, 0.93, 0.84, 1.0);
 	BitHolder::initHolder(position, color, spriteName);
-	// setSize(pieceSize, pieceSize);
+	setSize(pieceSize, pieceSize);
 }
 
 bool ChessSquare::canDropBitAtPoint(Bit* newbit, const ImVec2& point) {
