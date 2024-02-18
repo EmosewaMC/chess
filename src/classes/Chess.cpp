@@ -8,7 +8,7 @@ std::string indexToNotation(int row, int col);
 std::string Chess::pieceNotation(int row, int col) {
 	const char* pieces = { "?PNBRQK" };
 	std::string notation;
-	auto* bit = m_Grid[row * BoardSize + col].bit();
+	auto* bit = m_Grid[col * BoardSize + row].bit();
 	if (bit) {
 		notation.push_back(bit->gameTag() < 128 ? 'W' : 'B');
 		notation.push_back(pieces[bit->gameTag() & 127]);
@@ -46,6 +46,7 @@ void Chess::setUpBoard() {
 	_gameOptions.rowY = BoardSize;
 	// setup the board
 	for (int y = 0; y < NumberOfSquares; y++) {
+		LOG("square {} row {} col {}", LogLevel::INFO, y, y % BoardSize, y / BoardSize);		
 		m_Grid[y].initHolder(ImVec2(100 * static_cast<float>(y / BoardSize) + 100, 100 * static_cast<float>(y % BoardSize) + 100), "assets/chess/boardsquare.png", y % BoardSize, y / BoardSize);
 		m_Grid[y].setNotation(indexToNotation(y % BoardSize, y / BoardSize));
 	}
@@ -122,8 +123,8 @@ bool Chess::actionForEmptyHolder(BitHolder& holder) {
 
 bool Chess::canBitMoveFrom(Bit& bit, BitHolder& src) {
 	auto& srcSquare = static_cast<ChessSquare&>(src);
+	LOG("src {}", LogLevel::INFO, srcSquare.getNotation());
 	for (auto& move : _moves) {
-		LOG("move.from: {} src {}", LogLevel::INFO, move.from, srcSquare.getNotation());
 		if (move.from == srcSquare.getNotation()) {
 			return true;
 		}
@@ -218,6 +219,7 @@ void Chess::GenerateLinearMoves(std::vector<Move>& moves, int row, int col, std:
 void Chess::GeneratePawnMoves(std::vector<Move>& moves, int row, int col, char color) {
 	// first add the forward moves
 	int forward = color == 'W' ? -1 : 1;
+	LOG("forward: {} row: {} col: {}", LogLevel::INFO, forward, row, col);
 	if (row + forward >= 0 && row + forward < Chess::BoardSize && pieceNotation(row + forward, col) == "00") {
 		addMoveIfValid(moves, row, col, row + forward, col);
 		if ((row == 1 && pieceNotation(row + forward * 2, col) == "00") || (row == 6 && pieceNotation(row + forward * 2, col) == "00")) {
@@ -242,31 +244,28 @@ void Chess::GeneratePawnMoves(std::vector<Move>& moves, int row, int col, char c
 
 void Chess::GenerateMoves(char color) {
 	_moves.clear();
-	for (int row = 0; row < BoardSize; row++) {
-		for (int col = 0; col < BoardSize; col++) {
-			auto& square = m_Grid[col * BoardSize + row];
+	for (int col = 0; col < BoardSize; col++) {
+		for (int row = 0; row < BoardSize; row++) {
 			std::string piece = pieceNotation(row, col);
 			if (!piece.empty() && piece != "00" && piece[0] == color) {
-				LOG("piece: {} row {} col {}", LogLevel::INFO, piece, row, col);
 				switch (piece[1]) {
 				case 'P':
-					// GeneratePawnMoves(_moves, row, col, piece[0]);
+					GeneratePawnMoves(_moves, row, col, piece[0]);
 					break;
 				case 'R':
-					// GenerateRookMoves(_moves, row, col);
+					GenerateRookMoves(_moves, row, col);
 					break;
 				case 'N':
-					LOG("", LogLevel::INFO);
 					GenerateKnightMoves(_moves, row, col);
 					break;
 				case 'B':
-					// GenerateBishopMoves(_moves, row, col);
+					GenerateBishopMoves(_moves, row, col);
 					break;
 				case 'Q':
-					// GenerateQueenMoves(_moves, row, col);
+					GenerateQueenMoves(_moves, row, col);
 					break;
 				case 'K':
-					// GenerateKingMoves(_moves, row, col);
+					GenerateKingMoves(_moves, row, col);
 					break;
 				}
 			}
@@ -321,7 +320,7 @@ std::string Chess::stateString() {
 	for (int y = 0; y < BoardSize; y++) {
 		for (int x = 0; x < BoardSize; x++) {
 			const auto* bit = m_Grid[x * BoardSize + y].bit();
-			s << pieceNotation(x, y);
+			s << pieceNotation(y, x);
 		}
 		s << '\n';
 	}
