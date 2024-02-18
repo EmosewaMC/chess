@@ -199,22 +199,31 @@ void Game::drawFrame() {
 }
 
 void Game::bitMovedFromTo(Bit& bit, BitHolder& src, BitHolder& dst) {
+	(void)bit;
+	(void)src;
+	(void)dst;
 	endTurn();
 }
 
 Bit* Game::bitToPlaceInHolder(BitHolder& holder) {
+	(void)holder;
 	return nullptr;
 }
 
 bool Game::actionForEmptyHolder(BitHolder& holder) {
+	(void)holder;
 	return false;
 }
 
 bool Game::clickedBit(Bit& bit) {
+	(void)bit;
 	return true;
 }
 
 bool Game::animateAndPlaceBitFromTo(Bit& bit, BitHolder& src, BitHolder& dst) {
+	(void)bit;
+	(void)src;
+	(void)dst;
 	return false;
 }
 
@@ -279,6 +288,7 @@ void Game::mouseDown(ImVec2& location, Entity* entity) {
 }
 
 void Game::mouseMoved(ImVec2& location, Entity* entity) {
+	(void)entity;
 	if (_dragBit) {
 		// Get the mouse position, and see if we've moved 3 pixels since the mouseDown:
 		ImVec2 pos = location;

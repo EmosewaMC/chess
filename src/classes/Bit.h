@@ -50,7 +50,7 @@ public:
 	// move to a position
 	void moveTo(const ImVec2& point);
 	void update();
-	void setOpacity(float opacity) {};
+	void setOpacity(float opacity) { (void)opacity; };
 	bool getMoving() { return _moving; };
 
 private:

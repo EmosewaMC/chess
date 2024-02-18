@@ -30,11 +30,10 @@ class Chess : public Game
 public:
 	static constexpr int BoardSize = 8;
 	static constexpr int NumberOfSquares = BoardSize * BoardSize;
-	Chess();
 	~Chess();
 
 	// set up the board
-	void setUpBoard() override;
+	void Reset() override;
 
 	Player* checkForWinner() override;
 	bool checkForDraw() override;
@@ -42,7 +41,6 @@ public:
 	std::string initialStateString() override;
 	std::string stateString() override;
 	void setStateString(const std::string& s) override;
-	bool actionForEmptyHolder(BitHolder& holder) override;
 	bool canBitMoveFrom(Bit& bit, BitHolder& src) override;
 	bool canBitMoveFromTo(Bit& bit, BitHolder& src, BitHolder& dst) override;
 	void bitMovedFromTo(Bit& bit, BitHolder& src, BitHolder& dst) override;

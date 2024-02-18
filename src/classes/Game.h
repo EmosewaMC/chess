@@ -47,7 +47,7 @@ public:
 
 	void startGame();
 
-	virtual void setUpBoard() = 0;
+	virtual void Reset() = 0;
 
 	virtual void drawFrame();
 
@@ -90,7 +90,7 @@ public:
 	virtual void stopGame() = 0;
 	virtual bool gameHasAI();
 	virtual void updateAI();
-	virtual void pieceTaken(Bit* bit) {};
+	virtual void pieceTaken(Bit* bit) { (void)bit; };
 
 	virtual std::string initialStateString() = 0;
 	virtual std::string stateString() = 0;

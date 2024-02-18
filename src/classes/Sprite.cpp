@@ -52,7 +52,7 @@ bool Sprite::LoadTextureFromFile(const char* filename) {
 	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, image_width, image_height, 0, GL_RGBA, GL_UNSIGNED_BYTE, image_data);
 	stbi_image_free(image_data);
 
-	_texture = reinterpret_cast<ImTextureID>(image_texture);
+	_texture = reinterpret_cast<ImTextureID>(static_cast<uintptr_t>(image_texture));
 	_size = ImVec2((float)image_width, (float)image_height);
 
 	// cache it

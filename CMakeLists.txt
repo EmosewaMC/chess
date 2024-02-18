@@ -65,6 +65,7 @@ add_executable(chess
 
 target_include_directories(chess PRIVATE src)
 
+target_compile_definitions(chess PRIVATE "_CRT_SECURE_NO_WARNINGS" "/Zc:inline")
 target_compile_options(chess PRIVATE "/W4")
 
 target_link_libraries(chess ${OPENGL_gl_LIBRARY})

@@ -50,17 +50,24 @@ void BitHolder::cancelDragBit(Bit* bit) {
 }
 
 void BitHolder::draggedBitTo(Bit* bit, BitHolder* dst) {
+	(void)bit;
+	(void)dst;
 	setBit(nullptr);
 }
 
 bool BitHolder::canDropBitAtPoint(Bit* bit, const ImVec2& point) {
+	(void)bit;
+	(void)point;
 	return true;
 }
 
 void BitHolder::willNotDropBit(Bit* bit) {
+	(void)bit;
 }
 
 bool BitHolder::dropBitAtPoint(Bit* bit, const ImVec2& point) {
+	(void)bit;
+	(void)point;
 	return false;
 }
 

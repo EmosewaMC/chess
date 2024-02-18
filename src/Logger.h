@@ -21,7 +21,7 @@ public:
 
 	/**
 	 * @brief Construct a new Logger object and creates a file to log to.
-	 * 
+	 *
 	 * @param name The file to log messages to.
 	 * @param level The default verbosity of the logger.
 	 */

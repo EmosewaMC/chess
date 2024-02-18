@@ -18,9 +18,6 @@ std::string Chess::pieceNotation(int row, int col) {
 	return notation;
 }
 
-Chess::Chess() {
-}
-
 Chess::~Chess() {
 }
 
@@ -37,7 +34,7 @@ Bit* Chess::PieceForPlayer(const int playerNumber, const ChessPiece tag, const s
 	return bit;
 }
 
-void Chess::setUpBoard() {
+void Chess::Reset() {
 	LOG("", LogLevel::INFO);
 	srand((unsigned int)time(0));
 	setNumberOfPlayers(2);
@@ -46,17 +43,9 @@ void Chess::setUpBoard() {
 	_gameOptions.rowY = BoardSize;
 	// setup the board
 	for (int y = 0; y < NumberOfSquares; y++) {
-		LOG("square {} row {} col {}", LogLevel::INFO, y, y % BoardSize, y / BoardSize);		
 		m_Grid[y].initHolder(ImVec2(100 * static_cast<float>(y / BoardSize) + 100, 100 * static_cast<float>(y % BoardSize) + 100), "assets/chess/boardsquare.png", y % BoardSize, y / BoardSize);
 		m_Grid[y].setNotation(indexToNotation(y % BoardSize, y / BoardSize));
 	}
-
-	// int f = 0;
-	// for (auto& square : m_Grid) {
-	// 	square.setBit(PieceForPlayer(f % 2, "assets/chess/w_pawn.png"));
-	// 	square.bit()->setPosition(square.getPosition());
-	// 	f++;
-	// }
 
 	// setup the pawns
 	for (int i = 0; i < BoardSize; i++) {
@@ -117,13 +106,9 @@ void Chess::setUpBoard() {
 	GenerateMoves('W');
 }
 
-bool Chess::actionForEmptyHolder(BitHolder& holder) {
-	return false;
-}
-
 bool Chess::canBitMoveFrom(Bit& bit, BitHolder& src) {
+	(void)bit;
 	auto& srcSquare = static_cast<ChessSquare&>(src);
-	LOG("src {}", LogLevel::INFO, srcSquare.getNotation());
 	for (auto& move : _moves) {
 		if (move.from == srcSquare.getNotation()) {
 			return true;
@@ -133,6 +118,7 @@ bool Chess::canBitMoveFrom(Bit& bit, BitHolder& src) {
 }
 
 bool Chess::canBitMoveFromTo(Bit& bit, BitHolder& src, BitHolder& dst) {
+	(void)bit;
 	auto& srcSquare = static_cast<ChessSquare&>(src);
 	auto& dstSquare = static_cast<ChessSquare&>(dst);
 	for (auto& move : _moves) {
@@ -150,8 +136,8 @@ void Chess::bitMovedFromTo(Bit& bit, BitHolder& src, BitHolder& dst) {
 
 std::string indexToNotation(int row, int col) {
 	std::string notation;
-	notation.push_back('a' + col);
-	notation.push_back('8' - row);
+	notation.push_back('a' + static_cast<char>(col));
+	notation.push_back('8' - static_cast<char>(row));
 	return notation;
 }
 
@@ -219,7 +205,6 @@ void Chess::GenerateLinearMoves(std::vector<Move>& moves, int row, int col, std:
 void Chess::GeneratePawnMoves(std::vector<Move>& moves, int row, int col, char color) {
 	// first add the forward moves
 	int forward = color == 'W' ? -1 : 1;
-	LOG("forward: {} row: {} col: {}", LogLevel::INFO, forward, row, col);
 	if (row + forward >= 0 && row + forward < Chess::BoardSize && pieceNotation(row + forward, col) == "00") {
 		addMoveIfValid(moves, row, col, row + forward, col);
 		if ((row == 1 && pieceNotation(row + forward * 2, col) == "00") || (row == 6 && pieceNotation(row + forward * 2, col) == "00")) {
@@ -319,7 +304,6 @@ std::string Chess::stateString() {
 	s << '\n';
 	for (int y = 0; y < BoardSize; y++) {
 		for (int x = 0; x < BoardSize; x++) {
-			const auto* bit = m_Grid[x * BoardSize + y].bit();
 			s << pieceNotation(y, x);
 		}
 		s << '\n';
@@ -332,6 +316,6 @@ std::string Chess::stateString() {
 // when the program starts it will load the current game from the imgui ini file and set the game state to the last saved state
 //
 void Chess::setStateString(const std::string& s) {
-
+	(void)s;
 }
 
