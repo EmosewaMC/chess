@@ -30,11 +30,11 @@ Game::Game() {
 }
 
 Game::~Game() {
-	for (auto& _turn : _turns) {
+	for (auto _turn : _turns) {
 		delete _turn;
 	}
 	_turns.clear();
-	for (auto& _player : _players) {
+	for (auto _player : _players) {
 		delete _player;
 	}
 	_players.clear();
@@ -215,18 +215,6 @@ bool Game::actionForEmptyHolder(BitHolder& holder) {
 	return false;
 }
 
-bool Game::clickedBit(Bit& bit) {
-	(void)bit;
-	return true;
-}
-
-bool Game::animateAndPlaceBitFromTo(Bit& bit, BitHolder& src, BitHolder& dst) {
-	(void)bit;
-	(void)src;
-	(void)dst;
-	return false;
-}
-
 bool Game::gameHasAI() {
 	return false;
 }
@@ -354,7 +342,6 @@ void Game::mouseUp(ImVec2& location, Entity* entity) {
 			if (_oldHolder)
 				_oldHolder->cancelDragBit(_dragBit);
 			_dragBit->setPosition(_oldPos);
-			clickedBit(*_dragBit);
 		}
 		_dropTarget = nullptr;
 		_dragBit = nullptr;

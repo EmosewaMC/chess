@@ -43,7 +43,7 @@ class Game
 {
 public:
 	Game();
-	~Game();
+	virtual ~Game();
 
 	void startGame();
 
@@ -71,11 +71,6 @@ public:
 	// Default implementation just calls endTurn.
 	virtual void bitMovedFromTo(Bit& bit, BitHolder& src, BitHolder& dst);
 
-	// Called instead of the above if a Bit is simply clicked, not dragged.
-	// Should return NO if the click is illegal (i.e. clicking an empty draw pile in a card game.)
-	// Default implementation always returns true.
-	virtual bool clickedBit(Bit& bit);
-
 	// clear any board highlights we've setup for legal moves
 	virtual void clearBoardHighlights();
 
@@ -85,7 +80,6 @@ public:
 
 	virtual Player* checkForWinner() = 0;
 	virtual bool checkForDraw() = 0;
-	virtual bool animateAndPlaceBitFromTo(Bit& bit, BitHolder& src, BitHolder& dst);
 
 	virtual void stopGame() = 0;
 	virtual bool gameHasAI();

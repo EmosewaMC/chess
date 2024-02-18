@@ -18,9 +18,6 @@ std::string Chess::pieceNotation(int row, int col) {
 	return notation;
 }
 
-Chess::~Chess() {
-}
-
 //
 // make a rock, paper, or scissors piece for the player
 //

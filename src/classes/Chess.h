@@ -49,8 +49,6 @@ private:
 class Chess : public Game
 {
 public:
-	~Chess();
-
 	// set up the board
 	void Reset() override;
 
