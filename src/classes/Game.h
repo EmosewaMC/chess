@@ -113,12 +113,7 @@ public:
 	Player* getCurrentPlayer() { return _players.at(_gameOptions.currentTurnNo & 1); };
 	Player* getPlayerAt(unsigned int playerNumber) { return _players.at(playerNumber); };
 	const int getAIPlayer() { return _gameOptions.AIPlayer; };
-	const int getHumanPlayer() {
-		if (_gameOptions.AIPlayer == 1)
-			return 0;
-		else
-			return 1;
-	};
+	const int getHumanPlayer() { return _gameOptions.AIPlayer == 1 ? 0 : 1; };
 	GameTable* _table;
 	Player* _winner;
 

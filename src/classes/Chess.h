@@ -25,11 +25,29 @@ struct Move {
 	std::string to;
 };
 
+class ChessBoard {
+public:
+	typedef std::array<ChessSquare, 64>::iterator iterator;
+
+	static constexpr int Size = 8;
+	static constexpr int NumberOfSquares = Size * Size;
+	ChessSquare& GetSquareAt(const int rank, const int file) { return m_Grid[rank * Size + file]; }
+	ChessSquare& GetSquareAt(const int index) { return m_Grid[index]; }
+	ChessSquare& operator[](const int index) { return m_Grid[index]; }
+	iterator begin() { return m_Grid.begin(); }
+	iterator end() { return m_Grid.end(); }
+	size_t size() const { return m_Grid.size(); }
+
+	static constexpr int RankFromIndex(const int index) { return index / Size; }
+	static constexpr int FileFromIndex(const int index) { return index % Size; }
+
+private:
+	std::array<ChessSquare, NumberOfSquares> m_Grid;
+};
+
 class Chess : public Game
 {
 public:
-	static constexpr int BoardSize = 8;
-	static constexpr int NumberOfSquares = BoardSize * BoardSize;
 	~Chess();
 
 	// set up the board
@@ -45,7 +63,7 @@ public:
 	bool canBitMoveFromTo(Bit& bit, BitHolder& src, BitHolder& dst) override;
 	void bitMovedFromTo(Bit& bit, BitHolder& src, BitHolder& dst) override;
 	void stopGame() override;
-	BitHolder& getHolderAt(const int x, const int y) override { return m_Grid[x * BoardSize + y]; }
+	BitHolder& getHolderAt(const int x, const int y) override { return m_Board.GetSquareAt(y, x); }
 private:
 	std::string pieceNotation(int row, int col);
 	Bit* PieceForPlayer(const int playerNumber, const ChessPiece tag, const std::string_view texture);
@@ -60,7 +78,8 @@ private:
 	void GenerateQueenMoves(std::vector<Move>& moves, int row, int col);
 	void GenerateKingMoves(std::vector<Move>& moves, int row, int col);
 	void GeneratePawnMoves(std::vector<Move>& moves, int row, int col, char color);
-	std::array<ChessSquare, NumberOfSquares> m_Grid;
+
+	ChessBoard m_Board;
 	std::vector<Move> _moves;
 };
 

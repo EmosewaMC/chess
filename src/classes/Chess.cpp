@@ -8,7 +8,7 @@ std::string indexToNotation(int row, int col);
 std::string Chess::pieceNotation(int row, int col) {
 	const char* pieces = { "?PNBRQK" };
 	std::string notation;
-	auto* bit = m_Grid[col * BoardSize + row].bit();
+	auto* bit = m_Board[col * ChessBoard::Size + row].bit();
 	if (bit) {
 		notation.push_back(bit->gameTag() < 128 ? 'W' : 'B');
 		notation.push_back(pieces[bit->gameTag() & 127]);
@@ -39,63 +39,63 @@ void Chess::Reset() {
 	srand((unsigned int)time(0));
 	setNumberOfPlayers(2);
 	// this allows us to draw the board correctly
-	_gameOptions.rowX = BoardSize;
-	_gameOptions.rowY = BoardSize;
+	_gameOptions.rowX = ChessBoard::Size;
+	_gameOptions.rowY = ChessBoard::Size;
 	// setup the board
-	for (int y = 0; y < NumberOfSquares; y++) {
-		m_Grid[y].initHolder(ImVec2(100 * static_cast<float>(y / BoardSize) + 100, 100 * static_cast<float>(y % BoardSize) + 100), "assets/chess/boardsquare.png", y % BoardSize, y / BoardSize);
-		m_Grid[y].setNotation(indexToNotation(y % BoardSize, y / BoardSize));
+	for (int y = 0; y < ChessBoard::NumberOfSquares; y++) {
+		m_Board[y].initHolder(ImVec2(100 * static_cast<float>(y / ChessBoard::Size) + 100, 100 * static_cast<float>(y % ChessBoard::Size) + 100), "assets/chess/boardsquare.png", y % ChessBoard::Size, y / ChessBoard::Size);
+		m_Board[y].setNotation(indexToNotation(y % ChessBoard::Size, y / ChessBoard::Size));
 	}
 
 	// setup the pawns
-	for (int i = 0; i < BoardSize; i++) {
-		m_Grid[i * 8 + 1].setBit(PieceForPlayer(1, ChessPiece::Pawn, "assets/chess/b_pawn.png"));
-		m_Grid[i * 8 + 1].bit()->setPosition(m_Grid[i * 8 + 1].getPosition());
-		m_Grid[i * 8 + 6].setBit(PieceForPlayer(0, ChessPiece::Pawn, "assets/chess/w_pawn.png"));
-		m_Grid[i * 8 + 6].bit()->setPosition(m_Grid[i * 8 + 6].getPosition());
+	for (int i = 0; i < ChessBoard::Size; i++) {
+		m_Board[i * 8 + 1].setBit(PieceForPlayer(1, ChessPiece::Pawn, "assets/chess/b_pawn.png"));
+		m_Board[i * 8 + 1].bit()->setPosition(m_Board[i * 8 + 1].getPosition());
+		m_Board[i * 8 + 6].setBit(PieceForPlayer(0, ChessPiece::Pawn, "assets/chess/w_pawn.png"));
+		m_Board[i * 8 + 6].bit()->setPosition(m_Board[i * 8 + 6].getPosition());
 	}
 
 	// setup the rooks
-	m_Grid[0].setBit(PieceForPlayer(1, ChessPiece::Rook, "assets/chess/b_rook.png"));
-	m_Grid[0].bit()->setPosition(m_Grid[0].getPosition());
-	m_Grid[7].setBit(PieceForPlayer(0, ChessPiece::Rook, "assets/chess/w_rook.png"));
-	m_Grid[7].bit()->setPosition(m_Grid[7].getPosition());
-	m_Grid[56].setBit(PieceForPlayer(1, ChessPiece::Rook, "assets/chess/b_rook.png"));
-	m_Grid[56].bit()->setPosition(m_Grid[56].getPosition());
-	m_Grid[63].setBit(PieceForPlayer(0, ChessPiece::Rook, "assets/chess/w_rook.png"));
-	m_Grid[63].bit()->setPosition(m_Grid[63].getPosition());
+	m_Board[0].setBit(PieceForPlayer(1, ChessPiece::Rook, "assets/chess/b_rook.png"));
+	m_Board[0].bit()->setPosition(m_Board[0].getPosition());
+	m_Board[7].setBit(PieceForPlayer(0, ChessPiece::Rook, "assets/chess/w_rook.png"));
+	m_Board[7].bit()->setPosition(m_Board[7].getPosition());
+	m_Board[56].setBit(PieceForPlayer(1, ChessPiece::Rook, "assets/chess/b_rook.png"));
+	m_Board[56].bit()->setPosition(m_Board[56].getPosition());
+	m_Board[63].setBit(PieceForPlayer(0, ChessPiece::Rook, "assets/chess/w_rook.png"));
+	m_Board[63].bit()->setPosition(m_Board[63].getPosition());
 
 	// setup the knights
-	m_Grid[8].setBit(PieceForPlayer(1, ChessPiece::Knight, "assets/chess/b_knight.png"));
-	m_Grid[8].bit()->setPosition(m_Grid[8].getPosition());
-	m_Grid[15].setBit(PieceForPlayer(0, ChessPiece::Knight, "assets/chess/w_knight.png"));
-	m_Grid[15].bit()->setPosition(m_Grid[15].getPosition());
-	m_Grid[48].setBit(PieceForPlayer(1, ChessPiece::Knight, "assets/chess/b_knight.png"));
-	m_Grid[48].bit()->setPosition(m_Grid[48].getPosition());
-	m_Grid[55].setBit(PieceForPlayer(0, ChessPiece::Knight, "assets/chess/w_knight.png"));
-	m_Grid[55].bit()->setPosition(m_Grid[55].getPosition());
+	m_Board[8].setBit(PieceForPlayer(1, ChessPiece::Knight, "assets/chess/b_knight.png"));
+	m_Board[8].bit()->setPosition(m_Board[8].getPosition());
+	m_Board[15].setBit(PieceForPlayer(0, ChessPiece::Knight, "assets/chess/w_knight.png"));
+	m_Board[15].bit()->setPosition(m_Board[15].getPosition());
+	m_Board[48].setBit(PieceForPlayer(1, ChessPiece::Knight, "assets/chess/b_knight.png"));
+	m_Board[48].bit()->setPosition(m_Board[48].getPosition());
+	m_Board[55].setBit(PieceForPlayer(0, ChessPiece::Knight, "assets/chess/w_knight.png"));
+	m_Board[55].bit()->setPosition(m_Board[55].getPosition());
 
 	// setup the bishops
-	m_Grid[16].setBit(PieceForPlayer(1, ChessPiece::Bishop, "assets/chess/b_bishop.png"));
-	m_Grid[16].bit()->setPosition(m_Grid[16].getPosition());
-	m_Grid[23].setBit(PieceForPlayer(0, ChessPiece::Bishop, "assets/chess/w_bishop.png"));
-	m_Grid[23].bit()->setPosition(m_Grid[23].getPosition());
-	m_Grid[40].setBit(PieceForPlayer(1, ChessPiece::Bishop, "assets/chess/b_bishop.png"));
-	m_Grid[40].bit()->setPosition(m_Grid[40].getPosition());
-	m_Grid[47].setBit(PieceForPlayer(0, ChessPiece::Bishop, "assets/chess/w_bishop.png"));
-	m_Grid[47].bit()->setPosition(m_Grid[47].getPosition());
+	m_Board[16].setBit(PieceForPlayer(1, ChessPiece::Bishop, "assets/chess/b_bishop.png"));
+	m_Board[16].bit()->setPosition(m_Board[16].getPosition());
+	m_Board[23].setBit(PieceForPlayer(0, ChessPiece::Bishop, "assets/chess/w_bishop.png"));
+	m_Board[23].bit()->setPosition(m_Board[23].getPosition());
+	m_Board[40].setBit(PieceForPlayer(1, ChessPiece::Bishop, "assets/chess/b_bishop.png"));
+	m_Board[40].bit()->setPosition(m_Board[40].getPosition());
+	m_Board[47].setBit(PieceForPlayer(0, ChessPiece::Bishop, "assets/chess/w_bishop.png"));
+	m_Board[47].bit()->setPosition(m_Board[47].getPosition());
 
 	// setup the queens
-	m_Grid[24].setBit(PieceForPlayer(1, ChessPiece::Queen, "assets/chess/b_queen.png"));
-	m_Grid[24].bit()->setPosition(m_Grid[24].getPosition());
-	m_Grid[31].setBit(PieceForPlayer(0, ChessPiece::Queen, "assets/chess/w_queen.png"));
-	m_Grid[31].bit()->setPosition(m_Grid[31].getPosition());
+	m_Board[24].setBit(PieceForPlayer(1, ChessPiece::Queen, "assets/chess/b_queen.png"));
+	m_Board[24].bit()->setPosition(m_Board[24].getPosition());
+	m_Board[31].setBit(PieceForPlayer(0, ChessPiece::Queen, "assets/chess/w_queen.png"));
+	m_Board[31].bit()->setPosition(m_Board[31].getPosition());
 
 	// setup the kings
-	m_Grid[32].setBit(PieceForPlayer(1, ChessPiece::King, "assets/chess/b_king.png"));
-	m_Grid[32].bit()->setPosition(m_Grid[32].getPosition());
-	m_Grid[39].setBit(PieceForPlayer(0, ChessPiece::King, "assets/chess/w_king.png"));
-	m_Grid[39].bit()->setPosition(m_Grid[39].getPosition());
+	m_Board[32].setBit(PieceForPlayer(1, ChessPiece::King, "assets/chess/b_king.png"));
+	m_Board[32].bit()->setPosition(m_Board[32].getPosition());
+	m_Board[39].setBit(PieceForPlayer(0, ChessPiece::King, "assets/chess/w_king.png"));
+	m_Board[39].bit()->setPosition(m_Board[39].getPosition());
 
 	// if we have an AI set it up
 	if (gameHasAI()) {
@@ -142,7 +142,7 @@ std::string indexToNotation(int row, int col) {
 }
 
 void Chess::addMoveIfValid(std::vector<Move>& moves, const int fromRow, const int fromColumn, const int toRow, const int toColumn) {
-	if (toRow >= 0 && toRow < Chess::BoardSize && toColumn >= 0 && toColumn < Chess::BoardSize) {
+	if (toRow >= 0 && toRow < ChessBoard::Size && toColumn >= 0 && toColumn < ChessBoard::Size) {
 		if (pieceNotation(fromRow, fromColumn)[0] != pieceNotation(toRow, toColumn)[0]) {
 			moves.push_back({ indexToNotation(fromRow, fromColumn), indexToNotation(toRow, toColumn) });
 		}
@@ -190,7 +190,7 @@ void Chess::GenerateLinearMoves(std::vector<Move>& moves, int row, int col, std:
 	for (auto& direction : directions) {
 		int toRow = row + direction.first;
 		int toCol = col + direction.second;
-		while (toRow >= 0 && toRow < Chess::BoardSize && toCol >= 0 && toCol < Chess::BoardSize) {
+		while (toRow >= 0 && toRow < ChessBoard::Size && toCol >= 0 && toCol < ChessBoard::Size) {
 			if (pieceNotation(toRow, toCol) != "00") {
 				addMoveIfValid(moves, row, col, toRow, toCol);
 				break;
@@ -205,7 +205,7 @@ void Chess::GenerateLinearMoves(std::vector<Move>& moves, int row, int col, std:
 void Chess::GeneratePawnMoves(std::vector<Move>& moves, int row, int col, char color) {
 	// first add the forward moves
 	int forward = color == 'W' ? -1 : 1;
-	if (row + forward >= 0 && row + forward < Chess::BoardSize && pieceNotation(row + forward, col) == "00") {
+	if (row + forward >= 0 && row + forward < ChessBoard::Size && pieceNotation(row + forward, col) == "00") {
 		addMoveIfValid(moves, row, col, row + forward, col);
 		if ((row == 1 && pieceNotation(row + forward * 2, col) == "00") || (row == 6 && pieceNotation(row + forward * 2, col) == "00")) {
 			addMoveIfValid(moves, row, col, row + forward * 2, col);
@@ -213,13 +213,13 @@ void Chess::GeneratePawnMoves(std::vector<Move>& moves, int row, int col, char c
 	}
 
 	// now add the attack moves
-	if (row + forward >= 0 && row + forward < Chess::BoardSize && col + 1 < Chess::BoardSize) {
+	if (row + forward >= 0 && row + forward < ChessBoard::Size && col + 1 < ChessBoard::Size) {
 		if (pieceNotation(row + forward, col + 1) != "00") {
 			addMoveIfValid(moves, row, col, row + forward, col + 1);
 		}
 	}
 
-	if (row + forward >= 0 && row + forward < Chess::BoardSize && col - 1 >= 0) {
+	if (row + forward >= 0 && row + forward < ChessBoard::Size && col - 1 >= 0) {
 		if (pieceNotation(row + forward, col - 1) != "00") {
 			addMoveIfValid(moves, row, col, row + forward, col - 1);
 		}
@@ -229,8 +229,8 @@ void Chess::GeneratePawnMoves(std::vector<Move>& moves, int row, int col, char c
 
 void Chess::GenerateMoves(char color) {
 	_moves.clear();
-	for (int col = 0; col < BoardSize; col++) {
-		for (int row = 0; row < BoardSize; row++) {
+	for (int col = 0; col < ChessBoard::Size; col++) {
+		for (int row = 0; row < ChessBoard::Size; row++) {
 			std::string piece = pieceNotation(row, col);
 			if (!piece.empty() && piece != "00" && piece[0] == color) {
 				switch (piece[1]) {
@@ -261,7 +261,7 @@ void Chess::GenerateMoves(char color) {
 // free all the memory used by the game on the heap
 //
 void Chess::stopGame() {
-	for (auto& square : m_Grid) {
+	for (auto& square : m_Board) {
 		square.destroyBit();
 	}
 }
@@ -270,13 +270,13 @@ void Chess::stopGame() {
 // helper function for the winner check
 //
 Player* Chess::ownerAt(int index) {
-	if (index < 0 || index > m_Grid.size()) {
+	if (index < 0 || index > m_Board.size()) {
 		return nullptr;
 	}
-	if (!m_Grid[index].bit()) {
+	if (!m_Board[index].bit()) {
 		return nullptr;
 	}
-	return m_Grid[index].bit()->getOwner();
+	return m_Board[index].bit()->getOwner();
 }
 
 Player* Chess::checkForWinner() {
@@ -291,7 +291,7 @@ bool Chess::checkForDraw() {
 // state strings
 //
 std::string Chess::initialStateString() {
-	static std::string s('0', NumberOfSquares);
+	static std::string s('0', ChessBoard::NumberOfSquares);
 	return s;
 }
 
@@ -302,8 +302,8 @@ std::string Chess::initialStateString() {
 std::string Chess::stateString() {
 	std::stringstream s;
 	s << '\n';
-	for (int y = 0; y < BoardSize; y++) {
-		for (int x = 0; x < BoardSize; x++) {
+	for (int y = 0; y < ChessBoard::Size; y++) {
+		for (int x = 0; x < ChessBoard::Size; x++) {
 			s << pieceNotation(y, x);
 		}
 		s << '\n';
