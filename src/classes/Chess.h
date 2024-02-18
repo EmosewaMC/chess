@@ -27,10 +27,11 @@ struct Move {
 
 class ChessBoard {
 public:
-	typedef std::array<ChessSquare, 64>::iterator iterator;
-
 	static constexpr int Size = 8;
 	static constexpr int NumberOfSquares = Size * Size;
+
+	typedef std::array<ChessSquare, NumberOfSquares>::iterator iterator;
+
 	ChessSquare& GetSquareAt(const int rank, const int file) { return m_Grid[rank * Size + file]; }
 	ChessSquare& GetSquareAt(const int index) { return m_Grid[index]; }
 	ChessSquare& operator[](const int index) { return m_Grid[index]; }
