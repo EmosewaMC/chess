@@ -1,9 +1,6 @@
 #include "BitHolder.h"
 #include "Bit.h"
 
-BitHolder::~BitHolder() {
-}
-
 //
 // const version checks for bit without picking it up from the holder
 //
@@ -19,7 +16,7 @@ Bit* BitHolder::bit() {
 }
 
 void BitHolder::setBit(Bit* abit) {
-	if (abit != (void*)bit()) {
+	if (abit != bit()) {
 		if (_bit) {
 			delete _bit;
 			_bit = nullptr;
@@ -39,7 +36,7 @@ void BitHolder::destroyBit() {
 }
 
 Bit* BitHolder::canDragBit(Bit* bit) {
-	if (bit->getParent() == this && bit->friendly()) {
+	if (bit->getParent() == this) {
 		return bit;
 	}
 	return nullptr;

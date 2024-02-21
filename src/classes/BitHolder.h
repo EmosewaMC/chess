@@ -10,7 +10,6 @@ public:
 		_gameTag = 0;
 		_entityType = EntityBitHolder;
 	};
-	~BitHolder();
 
 	// current piece or nullptr if empty
 	Bit* bit() const;

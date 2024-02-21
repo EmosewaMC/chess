@@ -1,6 +1,10 @@
 #include "ChessSquare.h"
 #include "Chess.h"
 
+ChessSquare::~ChessSquare() {
+	destroyBit();
+}
+
 void ChessSquare::initHolder(const ImVec2& position, const char* spriteName, const int column, const int row) {
 	_column = column;
 	_row = row;

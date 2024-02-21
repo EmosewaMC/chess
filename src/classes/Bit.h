@@ -33,17 +33,14 @@ public:
 	~Bit();
 
 	// helper functions
-	bool getPickedUp();
+	bool getPickedUp() { return _pickedUp; }
 	void setPickedUp(bool yes);
 
 	// am I in a holder? nullptr if I'm not.
 	BitHolder* getHolder();
 	// which player owns me
-	Player* getOwner();
+	Player* getOwner() { return _owner; };
 	void setOwner(Player* player) { _owner = player; };
-	// helper functions
-	bool friendly();
-	bool unfriendly();
 	// game defined game tags
 	const int gameTag() const { return _gameTag; };
 	void setGameTag(int tag) { _gameTag = tag; };

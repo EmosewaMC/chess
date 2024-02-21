@@ -10,15 +10,14 @@ namespace GameGlobal {
 };
 
 namespace {
-	std::unique_ptr<Chess> game;
+	Chess game;
 	int gameWinner = -1;
 }
 
 void ClassGame::GameStartUp() {
 	GameGlobal::logger = std::make_unique<Logger>("Chess_" + std::to_string(time(0)) + ".log");
 	LOG("Started up game", LogLevel::INFO);
-	game = std::make_unique<Chess>();
-	game->Reset();
+	game.Reset();
 	gameWinner = -1;
 }
 
@@ -29,9 +28,9 @@ void ClassGame::GameStartUp() {
 void ClassGame::RenderGame() {
 	ImGui::DockSpaceOverViewport(ImGui::GetMainViewport());
 	ImGui::Begin("Settings");
-	ImGui::Text("Current Player Number: %d", game->getCurrentPlayer()->playerNumber());
-	ImGui::Text("Current Board State: %s", game->stateString().c_str());
-	if (game->checkForDraw()) {
+	ImGui::Text("Current Player Number: %d", game.getCurrentPlayer()->playerNumber());
+	ImGui::Text("Current Board State: %s", game.stateString().c_str());
+	if (game.checkForDraw()) {
 		ImGui::Text("Game Over!");
 		ImGui::Text("Draw!");
 	} else {
@@ -41,21 +40,21 @@ void ClassGame::RenderGame() {
 		}
 	}
 	if (ImGui::Button("Reset Game")) {
-		game->stopGame();
-		game->Reset();
+		game.stopGame();
+		game.Reset();
 		gameWinner = -1;
 	}
 	ImGui::End();
-	if (game->gameHasAI() && game->getCurrentPlayer()->isAIPlayer()) {
-		game->updateAI();
+	if (game.gameHasAI() && game.getCurrentPlayer()->isAIPlayer()) {
+		game.updateAI();
 	}
 	ImGui::Begin("GameWindow");
-	game->drawFrame();
+	game.drawFrame();
 	ImGui::End();
 }
 
 void ClassGame::EndOfTurn() {
-	Player* winner = game->checkForWinner();
+	Player* winner = game.checkForWinner();
 	if (winner) {
 		gameWinner = winner->playerNumber();
 	}

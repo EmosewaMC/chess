@@ -22,21 +22,12 @@ public:
 		return player;
 	}
 
-	std::string* name();
 	void setName(const std::string& name) { _name = name; }
 	void setPlayerNumber(int n) { _playerNumber = n; }
 	int playerNumber() { return _playerNumber; }
 	char playerColor() { return _playerNumber == 0 ? 'W' : 'B'; }
 
-	Game* game();
-	int index();
-	bool isCurrent();
-	bool isFriendly();
-	bool isUnfriendly();
-	Player* nextPlayer();
-	Player* previousPlayer();
 	bool isAIPlayer() const { return _aiPlayer; }
-	void copyFrom(Player& player);
 	void setAIPlayer(bool aiPlayer) { _aiPlayer = aiPlayer; }
 
 private:

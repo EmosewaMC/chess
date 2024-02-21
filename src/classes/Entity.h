@@ -15,6 +15,7 @@ public:
 
 	Entity() : _entityType(EntityNone), _parent(nullptr) {};
 	Entity(EntityType type) : _entityType(type) {};
+	virtual ~Entity() {};
 
 	EntityType getEntityType() { return _entityType; }
 
