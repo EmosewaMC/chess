@@ -6,15 +6,6 @@
 #include "Game.h"
 #include "ChessSquare.h"
 
-enum ChessPiece {
-	Pawn = 1,
-	Knight = 2,
-	Bishop = 3,
-	Rook = 4,
-	Queen = 5,
-	King = 6
-};
-
 //
 // the classic game of Rock, Paper, Scissors
 //
@@ -65,7 +56,7 @@ public:
 	BitHolder& getHolderAt(const int x, const int y) override { return m_Board.GetSquareAt(y, x); }
 private:
 	std::string pieceNotation(int row, int col);
-	Bit* PieceForPlayer(const int playerNumber, const ChessPiece tag, const std::string_view texture);
+	Bit* PieceForPlayer(const int playerNumber, const char tag, const std::string_view texture);
 	Player* ownerAt(int index);
 	void    scanForMouse();
 	void GenerateMoves(char color);

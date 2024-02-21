@@ -6,12 +6,11 @@
 std::string indexToNotation(int row, int col);
 
 std::string Chess::pieceNotation(int row, int col) {
-	const char* pieces = { "?PNBRQK" };
 	std::string notation;
 	auto* bit = m_Board[col * ChessBoard::Size + row].bit();
 	if (bit) {
-		notation.push_back(bit->gameTag() < 128 ? 'W' : 'B');
-		notation.push_back(pieces[bit->gameTag() & 127]);
+		notation.push_back(bit->gameTag() > static_cast<int>('Z') ? 'W' : 'B');
+		notation.push_back(static_cast<char>(std::toupper(bit->gameTag())));
 	} else {
 		notation = "00";
 	}
@@ -21,12 +20,12 @@ std::string Chess::pieceNotation(int row, int col) {
 //
 // make a rock, paper, or scissors piece for the player
 //
-Bit* Chess::PieceForPlayer(const int playerNumber, const ChessPiece tag, const std::string_view texture) {
+Bit* Chess::PieceForPlayer(const int playerNumber, const char tag, const std::string_view texture) {
 	Bit* bit = new Bit();
 	// should possibly be cached from player class?
 	bit->LoadTextureFromFile(texture.data());
 	bit->setOwner(getPlayerAt(playerNumber));
-	bit->setGameTag((playerNumber * 128) | tag);
+	bit->setGameTag(tag);
 	bit->setSize(pieceSize, pieceSize);
 	return bit;
 }
@@ -46,52 +45,52 @@ void Chess::Reset() {
 
 	// setup the pawns
 	for (int i = 0; i < ChessBoard::Size; i++) {
-		m_Board[i * 8 + 1].setBit(PieceForPlayer(1, ChessPiece::Pawn, "assets/chess/b_pawn.png"));
+		m_Board[i * 8 + 1].setBit(PieceForPlayer(1, 'P', "assets/chess/b_pawn.png"));
 		m_Board[i * 8 + 1].bit()->setPosition(m_Board[i * 8 + 1].getPosition());
-		m_Board[i * 8 + 6].setBit(PieceForPlayer(0, ChessPiece::Pawn, "assets/chess/w_pawn.png"));
+		m_Board[i * 8 + 6].setBit(PieceForPlayer(0, 'p', "assets/chess/w_pawn.png"));
 		m_Board[i * 8 + 6].bit()->setPosition(m_Board[i * 8 + 6].getPosition());
 	}
 
 	// setup the rooks
-	m_Board[0].setBit(PieceForPlayer(1, ChessPiece::Rook, "assets/chess/b_rook.png"));
+	m_Board[0].setBit(PieceForPlayer(1, 'R', "assets/chess/b_rook.png"));
 	m_Board[0].bit()->setPosition(m_Board[0].getPosition());
-	m_Board[7].setBit(PieceForPlayer(0, ChessPiece::Rook, "assets/chess/w_rook.png"));
+	m_Board[7].setBit(PieceForPlayer(0, 'r', "assets/chess/w_rook.png"));
 	m_Board[7].bit()->setPosition(m_Board[7].getPosition());
-	m_Board[56].setBit(PieceForPlayer(1, ChessPiece::Rook, "assets/chess/b_rook.png"));
+	m_Board[56].setBit(PieceForPlayer(1, 'R', "assets/chess/b_rook.png"));
 	m_Board[56].bit()->setPosition(m_Board[56].getPosition());
-	m_Board[63].setBit(PieceForPlayer(0, ChessPiece::Rook, "assets/chess/w_rook.png"));
+	m_Board[63].setBit(PieceForPlayer(0, 'r', "assets/chess/w_rook.png"));
 	m_Board[63].bit()->setPosition(m_Board[63].getPosition());
 
 	// setup the knights
-	m_Board[8].setBit(PieceForPlayer(1, ChessPiece::Knight, "assets/chess/b_knight.png"));
+	m_Board[8].setBit(PieceForPlayer(1, 'N', "assets/chess/b_knight.png"));
 	m_Board[8].bit()->setPosition(m_Board[8].getPosition());
-	m_Board[15].setBit(PieceForPlayer(0, ChessPiece::Knight, "assets/chess/w_knight.png"));
+	m_Board[15].setBit(PieceForPlayer(0, 'n', "assets/chess/w_knight.png"));
 	m_Board[15].bit()->setPosition(m_Board[15].getPosition());
-	m_Board[48].setBit(PieceForPlayer(1, ChessPiece::Knight, "assets/chess/b_knight.png"));
+	m_Board[48].setBit(PieceForPlayer(1, 'N', "assets/chess/b_knight.png"));
 	m_Board[48].bit()->setPosition(m_Board[48].getPosition());
-	m_Board[55].setBit(PieceForPlayer(0, ChessPiece::Knight, "assets/chess/w_knight.png"));
+	m_Board[55].setBit(PieceForPlayer(0, 'n', "assets/chess/w_knight.png"));
 	m_Board[55].bit()->setPosition(m_Board[55].getPosition());
 
 	// setup the bishops
-	m_Board[16].setBit(PieceForPlayer(1, ChessPiece::Bishop, "assets/chess/b_bishop.png"));
+	m_Board[16].setBit(PieceForPlayer(1, 'B', "assets/chess/b_bishop.png"));
 	m_Board[16].bit()->setPosition(m_Board[16].getPosition());
-	m_Board[23].setBit(PieceForPlayer(0, ChessPiece::Bishop, "assets/chess/w_bishop.png"));
+	m_Board[23].setBit(PieceForPlayer(0, 'b', "assets/chess/w_bishop.png"));
 	m_Board[23].bit()->setPosition(m_Board[23].getPosition());
-	m_Board[40].setBit(PieceForPlayer(1, ChessPiece::Bishop, "assets/chess/b_bishop.png"));
+	m_Board[40].setBit(PieceForPlayer(1, 'B', "assets/chess/b_bishop.png"));
 	m_Board[40].bit()->setPosition(m_Board[40].getPosition());
-	m_Board[47].setBit(PieceForPlayer(0, ChessPiece::Bishop, "assets/chess/w_bishop.png"));
+	m_Board[47].setBit(PieceForPlayer(0, 'b', "assets/chess/w_bishop.png"));
 	m_Board[47].bit()->setPosition(m_Board[47].getPosition());
 
 	// setup the queens
-	m_Board[24].setBit(PieceForPlayer(1, ChessPiece::Queen, "assets/chess/b_queen.png"));
+	m_Board[24].setBit(PieceForPlayer(1, 'Q', "assets/chess/b_queen.png"));
 	m_Board[24].bit()->setPosition(m_Board[24].getPosition());
-	m_Board[31].setBit(PieceForPlayer(0, ChessPiece::Queen, "assets/chess/w_queen.png"));
+	m_Board[31].setBit(PieceForPlayer(0, 'q', "assets/chess/w_queen.png"));
 	m_Board[31].bit()->setPosition(m_Board[31].getPosition());
 
 	// setup the kings
-	m_Board[32].setBit(PieceForPlayer(1, ChessPiece::King, "assets/chess/b_king.png"));
+	m_Board[32].setBit(PieceForPlayer(1, 'K', "assets/chess/b_king.png"));
 	m_Board[32].bit()->setPosition(m_Board[32].getPosition());
-	m_Board[39].setBit(PieceForPlayer(0, ChessPiece::King, "assets/chess/w_king.png"));
+	m_Board[39].setBit(PieceForPlayer(0, 'k', "assets/chess/w_king.png"));
 	m_Board[39].bit()->setPosition(m_Board[39].getPosition());
 
 	// if we have an AI set it up
