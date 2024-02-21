@@ -339,6 +339,10 @@ void Chess::setStateString(const std::string& s) {
 		{ 'k', "assets/chess/b_king.png" }
 	};
 
+	for (auto& square : m_Board) {
+		square.destroyBit();
+	}
+
 	int rank = 0;
 	int file = 0;
 	for (auto c : s) {
