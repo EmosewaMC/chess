@@ -23,27 +23,24 @@ class Bit : public Sprite
 {
 public:
 	Bit() : Sprite() {
-		_pickedUp = false;
-		_owner = nullptr;
-		_gameTag = 0;
 		_entityType = EntityBit;
-		_moving = false;
 	};
-
-	~Bit();
 
 	// helper functions
 	bool getPickedUp() { return _pickedUp; }
 	void setPickedUp(bool yes);
 
 	// am I in a holder? nullptr if I'm not.
-	BitHolder* getHolder();
+	Entity* getHolder();
+
 	// which player owns me
 	Player* getOwner() { return _owner; };
 	void setOwner(Player* player) { _owner = player; };
+
 	// game defined game tags
 	const int gameTag() const { return _gameTag; };
 	void setGameTag(int tag) { _gameTag = tag; };
+
 	// move to a position
 	void moveTo(const ImVec2& point);
 	void update();
@@ -51,12 +48,12 @@ public:
 	bool getMoving() { return _moving; };
 
 private:
-	int _restingZ;
-	float _restingTransform;
-	bool _pickedUp;
-	Player* _owner;
-	int _gameTag;
-	ImVec2 _destinationPosition;
-	ImVec2 _destinationStep;
-	bool _moving;
+	int _restingZ = 0;
+	float _restingTransform = 0.0f;
+	bool _pickedUp = false;
+	Player* _owner = nullptr;
+	int _gameTag = 0;
+	ImVec2 _destinationPosition{};
+	ImVec2 _destinationStep{};
+	bool _moving = false;
 };

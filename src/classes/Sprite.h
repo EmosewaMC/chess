@@ -59,8 +59,6 @@ public:
 	int getLocalZOrder() { return _localZOrder; }
 	// get rotation
 	float getRotation() { return _rotation; }
-	// moveTo
-	void moveTo(const ImVec2& point) { _location = point; }
 	// draw the sprite
 	void paintSprite() {
 #ifndef UCI_INTERFACE
@@ -72,7 +70,7 @@ public:
 #endif
 	}
 	// is the mouse over this position?
-	bool isMouseOver(const ImVec2& mousePos) {
+	virtual bool isMouseOver(const ImVec2& mousePos) {
 		return (mousePos.x >= _location.x && mousePos.x <= _location.x + _size.x && mousePos.y >= _location.y && mousePos.y <= _location.y + _size.y);
 	}
 

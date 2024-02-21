@@ -1,4 +1,4 @@
 cd build
 cmake ..
-cmake --build . --config RelWithDebInfo -j32
+cmake --build . --config RelWithDebInfo
 cd ..

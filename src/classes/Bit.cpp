@@ -2,18 +2,14 @@
 #include "Bit.h"
 #include "BitHolder.h"
 
-Bit::~Bit() {
-}
-
-BitHolder* Bit::getHolder() {
+Entity* Bit::getHolder() {
 	// Look for my nearest ancestor that's a BitHolder:
-	for (Entity* layer = getParent(); layer; layer = layer->getParent()) {
-		if (layer->getEntityType() == EntityBitHolder)
-			return (BitHolder*)layer;
-		else if (layer->getEntityType() == EntityBit)
-			return nullptr;
+	Entity* toReturn = getParent();
+	while (toReturn) {
+		if (dynamic_cast<BitHolder*>(toReturn)) break;
+		else if (dynamic_cast<Bit*>(toReturn)) toReturn = nullptr;
 	}
-	return nullptr;
+	return toReturn;
 }
 
 void Bit::setPickedUp(bool up) {
@@ -55,9 +51,8 @@ void Bit::moveTo(const ImVec2& point) {
 }
 
 void Bit::update() {
-	if (!_moving) {
-		return;
-	}
+	if (!_moving) return;
+
 	ImVec2 pos = getPosition();
 	ImVec2 delta = ImVec2(_destinationPosition.x - pos.x, _destinationPosition.y - pos.y);
 	if (fabs(delta.x) >= 0.1f || fabs(delta.y) > 0.1f) {

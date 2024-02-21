@@ -250,7 +250,7 @@ void Game::mouseDown(ImVec2& location, Entity* entity) {
 	// Clicked on a Bit:
 	_dragMoved = false;
 	_dropTarget = nullptr;
-	_oldHolder = _dragBit->getHolder();
+	_oldHolder = static_cast<BitHolder*>(_dragBit->getHolder());
 	// Ask holder's and game's permission before dragging:
 	if (_oldHolder) {
 		_dragBit = _oldHolder->canDragBit(_dragBit);
