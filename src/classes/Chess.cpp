@@ -47,52 +47,52 @@ void Chess::Reset() {
 
 	// setup the pawns
 	for (int i = 0; i < ChessBoard::Size; i++) {
-		m_Board[i * 8 + 1].setBit(PieceForPlayer(1, 'P', "assets/chess/b_pawn.png"));
+		m_Board[i * 8 + 1].setBit(PieceForPlayer(1, 'p', "assets/chess/b_pawn.png"));
 		m_Board[i * 8 + 1].bit()->setPosition(m_Board[i * 8 + 1].getPosition());
-		m_Board[i * 8 + 6].setBit(PieceForPlayer(0, 'p', "assets/chess/w_pawn.png"));
+		m_Board[i * 8 + 6].setBit(PieceForPlayer(0, 'P', "assets/chess/w_pawn.png"));
 		m_Board[i * 8 + 6].bit()->setPosition(m_Board[i * 8 + 6].getPosition());
 	}
 
 	// setup the rooks
-	m_Board[0].setBit(PieceForPlayer(1, 'R', "assets/chess/b_rook.png"));
+	m_Board[0].setBit(PieceForPlayer(1, 'r', "assets/chess/b_rook.png"));
 	m_Board[0].bit()->setPosition(m_Board[0].getPosition());
-	m_Board[7].setBit(PieceForPlayer(0, 'r', "assets/chess/w_rook.png"));
+	m_Board[7].setBit(PieceForPlayer(0, 'R', "assets/chess/w_rook.png"));
 	m_Board[7].bit()->setPosition(m_Board[7].getPosition());
-	m_Board[56].setBit(PieceForPlayer(1, 'R', "assets/chess/b_rook.png"));
+	m_Board[56].setBit(PieceForPlayer(1, 'r', "assets/chess/b_rook.png"));
 	m_Board[56].bit()->setPosition(m_Board[56].getPosition());
-	m_Board[63].setBit(PieceForPlayer(0, 'r', "assets/chess/w_rook.png"));
+	m_Board[63].setBit(PieceForPlayer(0, 'R', "assets/chess/w_rook.png"));
 	m_Board[63].bit()->setPosition(m_Board[63].getPosition());
 
 	// setup the knights
-	m_Board[8].setBit(PieceForPlayer(1, 'N', "assets/chess/b_knight.png"));
+	m_Board[8].setBit(PieceForPlayer(1, 'n', "assets/chess/b_knight.png"));
 	m_Board[8].bit()->setPosition(m_Board[8].getPosition());
-	m_Board[15].setBit(PieceForPlayer(0, 'n', "assets/chess/w_knight.png"));
+	m_Board[15].setBit(PieceForPlayer(0, 'N', "assets/chess/w_knight.png"));
 	m_Board[15].bit()->setPosition(m_Board[15].getPosition());
-	m_Board[48].setBit(PieceForPlayer(1, 'N', "assets/chess/b_knight.png"));
+	m_Board[48].setBit(PieceForPlayer(1, 'n', "assets/chess/b_knight.png"));
 	m_Board[48].bit()->setPosition(m_Board[48].getPosition());
-	m_Board[55].setBit(PieceForPlayer(0, 'n', "assets/chess/w_knight.png"));
+	m_Board[55].setBit(PieceForPlayer(0, 'N', "assets/chess/w_knight.png"));
 	m_Board[55].bit()->setPosition(m_Board[55].getPosition());
 
 	// setup the bishops
-	m_Board[16].setBit(PieceForPlayer(1, 'B', "assets/chess/b_bishop.png"));
+	m_Board[16].setBit(PieceForPlayer(1, 'b', "assets/chess/b_bishop.png"));
 	m_Board[16].bit()->setPosition(m_Board[16].getPosition());
-	m_Board[23].setBit(PieceForPlayer(0, 'b', "assets/chess/w_bishop.png"));
+	m_Board[23].setBit(PieceForPlayer(0, 'B', "assets/chess/w_bishop.png"));
 	m_Board[23].bit()->setPosition(m_Board[23].getPosition());
-	m_Board[40].setBit(PieceForPlayer(1, 'B', "assets/chess/b_bishop.png"));
+	m_Board[40].setBit(PieceForPlayer(1, 'b', "assets/chess/b_bishop.png"));
 	m_Board[40].bit()->setPosition(m_Board[40].getPosition());
-	m_Board[47].setBit(PieceForPlayer(0, 'b', "assets/chess/w_bishop.png"));
+	m_Board[47].setBit(PieceForPlayer(0, 'B', "assets/chess/w_bishop.png"));
 	m_Board[47].bit()->setPosition(m_Board[47].getPosition());
 
 	// setup the queens
-	m_Board[24].setBit(PieceForPlayer(1, 'Q', "assets/chess/b_queen.png"));
+	m_Board[24].setBit(PieceForPlayer(1, 'q', "assets/chess/b_queen.png"));
 	m_Board[24].bit()->setPosition(m_Board[24].getPosition());
-	m_Board[31].setBit(PieceForPlayer(0, 'q', "assets/chess/w_queen.png"));
+	m_Board[31].setBit(PieceForPlayer(0, 'Q', "assets/chess/w_queen.png"));
 	m_Board[31].bit()->setPosition(m_Board[31].getPosition());
 
 	// setup the kings
-	m_Board[32].setBit(PieceForPlayer(1, 'K', "assets/chess/b_king.png"));
+	m_Board[32].setBit(PieceForPlayer(1, 'k', "assets/chess/b_king.png"));
 	m_Board[32].bit()->setPosition(m_Board[32].getPosition());
-	m_Board[39].setBit(PieceForPlayer(0, 'k', "assets/chess/w_king.png"));
+	m_Board[39].setBit(PieceForPlayer(0, 'K', "assets/chess/w_king.png"));
 	m_Board[39].bit()->setPosition(m_Board[39].getPosition());
 
 	// if we have an AI set it up
@@ -172,7 +172,6 @@ void Chess::GenerateKnightMoves(std::vector<Move>& moves, int row, int col) {
 	for (int i = 0; i < 8; i++) {
 		int toRow = row + rowOffsets[i];
 		int toCol = col + colOffsets[i];
-		LOG("", LogLevel::INFO);
 		addMoveIfValid(moves, row, col, toRow, toCol);
 	}
 }
@@ -231,7 +230,7 @@ void Chess::GeneratePawnMoves(std::vector<Move>& moves, int row, int col, char c
 
 void Chess::GenerateMoves(char color) {
 	_moves.clear();
-	const bool isUpper = color == 'B';
+	const bool isUpper = color == 'W';
 	for (int col = 0; col < ChessBoard::Size; col++) {
 		for (int row = 0; row < ChessBoard::Size; row++) {
 			char piece = pieceNotation(row, col);
@@ -325,6 +324,54 @@ std::string Chess::stateString() {
 // when the program starts it will load the current game from the imgui ini file and set the game state to the last saved state
 //
 void Chess::setStateString(const std::string& s) {
-	(void)s;
+	std::map<char, std::string> pieceTextures = {
+		{ 'P', "assets/chess/w_pawn.png" },
+		{ 'p', "assets/chess/b_pawn.png" },
+		{ 'R', "assets/chess/w_rook.png" },
+		{ 'r', "assets/chess/b_rook.png" },
+		{ 'N', "assets/chess/w_knight.png" },
+		{ 'n', "assets/chess/b_knight.png" },
+		{ 'B', "assets/chess/w_bishop.png" },
+		{ 'b', "assets/chess/b_bishop.png" },
+		{ 'Q', "assets/chess/w_queen.png" },
+		{ 'q', "assets/chess/b_queen.png" },
+		{ 'K', "assets/chess/w_king.png" },
+		{ 'k', "assets/chess/b_king.png" }
+	};
+
+	int rank = 0;
+	int file = 0;
+	for (auto c : s) {
+		if (rank >= 8) {
+			break;
+		}
+
+		if (c != '/') {
+			if (std::isdigit(c)) {
+				file += c - '0';
+			} else if (pieceTextures.find(c) != pieceTextures.end()) {
+				LOG("piece {} is going at {}", LogLevel::INFO, c, rank + file * 8);
+				m_Board[rank + file * 8].setBit(PieceForPlayer(c >= 'a' ? 0 : 1, c, pieceTextures[c]));
+				m_Board[rank + file * 8].bit()->setPosition(m_Board[rank + file * 8].getPosition());
+				file++;
+			}
+		}
+
+		if (file >= 8) {
+			file = 0;
+			rank++;
+		}
+	}
+
+	// auto state = s.substr(s.find(' ') + 1);
+	// LOG("state string is {}", LogLevel::INFO, state);
+	// GenerateMoves(std::toupper(state.front()));
+
+	// auto castlingState = state.substr(state.find(' ') + 1);
+	// LOG("castling state is {}", LogLevel::INFO, castlingState);
+	// startGame();
+
+	// Need to deal with this later
+	
 }
 
