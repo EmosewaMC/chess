@@ -23,7 +23,7 @@ public:
 
 	typedef std::array<ChessSquare, NumberOfSquares>::iterator iterator;
 
-	ChessSquare& GetSquareAt(const int rank, const int file) { return m_Grid[rank * Size + file]; }
+	ChessSquare& GetSquareAt(const int rank, const int file) { return m_Grid[rank + file * Size]; }
 	ChessSquare& GetSquareAt(const int index) { return m_Grid[index]; }
 	ChessSquare& operator[](const int index) { return m_Grid[index]; }
 	iterator begin() { return m_Grid.begin(); }
@@ -55,7 +55,7 @@ public:
 	void stopGame() override;
 	BitHolder& getHolderAt(const int x, const int y) override { return m_Board.GetSquareAt(y, x); }
 private:
-	std::string pieceNotation(int row, int col);
+	char pieceNotation(int row, int col);
 	Bit* PieceForPlayer(const int playerNumber, const char tag, const std::string_view texture);
 	Player* ownerAt(int index);
 	void    scanForMouse();

@@ -50,5 +50,5 @@ public:
 
 protected:
 	Bit* _bit = nullptr;
-	int _gameTag = 0;
+	int _gameTag = '0';
 };

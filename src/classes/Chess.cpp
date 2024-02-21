@@ -5,16 +5,18 @@
 
 std::string indexToNotation(int row, int col);
 
-std::string Chess::pieceNotation(int row, int col) {
-	std::string notation;
-	auto* bit = m_Board[col * ChessBoard::Size + row].bit();
-	if (bit) {
-		notation.push_back(bit->gameTag() > static_cast<int>('Z') ? 'W' : 'B');
-		notation.push_back(static_cast<char>(std::toupper(bit->gameTag())));
-	} else {
-		notation = "00";
+namespace {
+	char pieceNotation(ChessSquare& square) {
+		auto* bit = square.bit();
+		return bit ? static_cast<char>(bit->gameTag()) : '0';
 	}
-	return notation;
+};
+
+char Chess::pieceNotation(int rank, int file) {
+	if (rank < 0 || rank >= ChessBoard::Size || file < 0 || file >= ChessBoard::Size) {
+		return '0';
+	}
+	return ::pieceNotation(m_Board.GetSquareAt(rank, file));
 }
 
 //
@@ -139,7 +141,10 @@ std::string indexToNotation(int row, int col) {
 
 void Chess::addMoveIfValid(std::vector<Move>& moves, const int fromRow, const int fromColumn, const int toRow, const int toColumn) {
 	if (toRow >= 0 && toRow < ChessBoard::Size && toColumn >= 0 && toColumn < ChessBoard::Size) {
-		if (pieceNotation(fromRow, fromColumn)[0] != pieceNotation(toRow, toColumn)[0]) {
+		auto fromNotation = pieceNotation(fromRow, fromColumn);
+		auto toNotation = pieceNotation(toRow, toColumn);
+
+		if (toNotation == '0' || std::isupper(fromNotation) != std::isupper(toNotation)) {
 			moves.push_back({ indexToNotation(fromRow, fromColumn), indexToNotation(toRow, toColumn) });
 		}
 	}
@@ -167,6 +172,7 @@ void Chess::GenerateKnightMoves(std::vector<Move>& moves, int row, int col) {
 	for (int i = 0; i < 8; i++) {
 		int toRow = row + rowOffsets[i];
 		int toCol = col + colOffsets[i];
+		LOG("", LogLevel::INFO);
 		addMoveIfValid(moves, row, col, toRow, toCol);
 	}
 }
@@ -187,7 +193,7 @@ void Chess::GenerateLinearMoves(std::vector<Move>& moves, int row, int col, std:
 		int toRow = row + direction.first;
 		int toCol = col + direction.second;
 		while (toRow >= 0 && toRow < ChessBoard::Size && toCol >= 0 && toCol < ChessBoard::Size) {
-			if (pieceNotation(toRow, toCol) != "00") {
+			if (pieceNotation(toRow, toCol) != '0') {
 				addMoveIfValid(moves, row, col, toRow, toCol);
 				break;
 			}
@@ -201,22 +207,22 @@ void Chess::GenerateLinearMoves(std::vector<Move>& moves, int row, int col, std:
 void Chess::GeneratePawnMoves(std::vector<Move>& moves, int row, int col, char color) {
 	// first add the forward moves
 	int forward = color == 'W' ? -1 : 1;
-	if (row + forward >= 0 && row + forward < ChessBoard::Size && pieceNotation(row + forward, col) == "00") {
+	if (row + forward >= 0 && row + forward < ChessBoard::Size && pieceNotation(row + forward, col) == '0') {
 		addMoveIfValid(moves, row, col, row + forward, col);
-		if ((row == 1 && pieceNotation(row + forward * 2, col) == "00") || (row == 6 && pieceNotation(row + forward * 2, col) == "00")) {
+		if ((row == 1 && pieceNotation(row + forward * 2, col) == '0') || (row == 6 && pieceNotation(row + forward * 2, col) == '0')) {
 			addMoveIfValid(moves, row, col, row + forward * 2, col);
 		}
 	}
 
 	// now add the attack moves
 	if (row + forward >= 0 && row + forward < ChessBoard::Size && col + 1 < ChessBoard::Size) {
-		if (pieceNotation(row + forward, col + 1) != "00") {
+		if (pieceNotation(row + forward, col + 1) != '0') {
 			addMoveIfValid(moves, row, col, row + forward, col + 1);
 		}
 	}
 
 	if (row + forward >= 0 && row + forward < ChessBoard::Size && col - 1 >= 0) {
-		if (pieceNotation(row + forward, col - 1) != "00") {
+		if (pieceNotation(row + forward, col - 1) != '0') {
 			addMoveIfValid(moves, row, col, row + forward, col - 1);
 		}
 	}
@@ -225,27 +231,34 @@ void Chess::GeneratePawnMoves(std::vector<Move>& moves, int row, int col, char c
 
 void Chess::GenerateMoves(char color) {
 	_moves.clear();
+	const bool isUpper = color == 'B';
 	for (int col = 0; col < ChessBoard::Size; col++) {
 		for (int row = 0; row < ChessBoard::Size; row++) {
-			std::string piece = pieceNotation(row, col);
-			if (!piece.empty() && piece != "00" && piece[0] == color) {
-				switch (piece[1]) {
+			char piece = pieceNotation(row, col);
+			if (piece != '0' && static_cast<bool>(std::isupper(piece)) == isUpper) {
+				switch (piece) {
 				case 'P':
-					GeneratePawnMoves(_moves, row, col, piece[0]);
+				case 'p':
+					GeneratePawnMoves(_moves, row, col, color);
 					break;
 				case 'R':
+				case 'r':
 					GenerateRookMoves(_moves, row, col);
 					break;
 				case 'N':
+				case 'n':
 					GenerateKnightMoves(_moves, row, col);
 					break;
 				case 'B':
+				case 'b':
 					GenerateBishopMoves(_moves, row, col);
 					break;
 				case 'Q':
+				case 'q':
 					GenerateQueenMoves(_moves, row, col);
 					break;
 				case 'K':
+				case 'k':
 					GenerateKingMoves(_moves, row, col);
 					break;
 				}
