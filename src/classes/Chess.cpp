@@ -33,6 +33,11 @@ Bit* Chess::PieceForPlayer(const int playerNumber, const char tag, const std::st
 }
 
 void Chess::Reset() {
+	m_BlackCastleKingSide = true;
+	m_BlackCastleQueenSide = true;
+	m_WhiteCastleKingSide = true;
+	m_WhiteCastleQueenSide = true;
+
 	LOG("", LogLevel::INFO);
 	srand((unsigned int)time(0));
 	setNumberOfPlayers(2);
@@ -128,7 +133,56 @@ bool Chess::canBitMoveFromTo(Bit& bit, BitHolder& src, BitHolder& dst) {
 }
 
 void Chess::bitMovedFromTo(Bit& bit, BitHolder& src, BitHolder& dst) {
+	auto& srcSquare = static_cast<ChessSquare&>(src);
+	auto& dstSquare = static_cast<ChessSquare&>(dst);
 	Game::bitMovedFromTo(bit, src, dst);
+
+	// promotion
+	if (dstSquare.bit() && dstSquare.bit()->gameTag() == 'P' && dstSquare.getColumn() == 0) {
+		dst.setBit(PieceForPlayer(getCurrentPlayer()->playerNumber(), 'Q', "assets/chess/w_queen.png"));
+		dst.bit()->setPosition(dst.getPosition());
+	}
+
+	if (dstSquare.bit() && dstSquare.bit()->gameTag() == 'p' && dstSquare.getColumn() == 7) {
+		dst.setBit(PieceForPlayer(getCurrentPlayer()->playerNumber(), 'q', "assets/chess/b_queen.png"));
+		dst.bit()->setPosition(dst.getPosition());
+	}
+
+	// white castling
+	if (dstSquare.bit() && dstSquare.bit()->gameTag() == 'K') {
+		// move the king side rook
+		if (m_WhiteCastleKingSide && dstSquare.getRow() == 6) {
+			m_Board[47].setBit(PieceForPlayer(getCurrentPlayer()->playerNumber(), 'R', "assets/chess/w_rook.png"));
+			m_Board[47].bit()->setPosition(m_Board[47].getPosition());
+			m_Board[63].destroyBit();
+		}
+
+		if (m_WhiteCastleQueenSide && dstSquare.getRow() == 2) {
+			m_Board[31].setBit(PieceForPlayer(getCurrentPlayer()->playerNumber(), 'R', "assets/chess/w_rook.png"));
+			m_Board[31].bit()->setPosition(m_Board[31].getPosition());
+			m_Board[7].destroyBit();
+		}
+		m_WhiteCastleKingSide = false;
+		m_WhiteCastleQueenSide = false;
+	}
+
+	// black side castling
+	if (dstSquare.bit() && dstSquare.bit()->gameTag() == 'k') {
+		// move the king side rook
+		if (m_BlackCastleKingSide && dstSquare.getRow() == 6) {
+			m_Board[40].setBit(PieceForPlayer(getCurrentPlayer()->playerNumber(), 'r', "assets/chess/b_rook.png"));
+			m_Board[40].bit()->setPosition(m_Board[40].getPosition());
+			m_Board[56].destroyBit();
+		}
+
+		if (m_BlackCastleQueenSide && dstSquare.getRow() == 2) {
+			m_Board[24].setBit(PieceForPlayer(getCurrentPlayer()->playerNumber(), 'r', "assets/chess/b_rook.png"));
+			m_Board[24].bit()->setPosition(m_Board[24].getPosition());
+			m_Board[0].destroyBit();
+		}
+		m_BlackCastleKingSide = false;
+		m_BlackCastleQueenSide = false;
+	}
 	GenerateMoves(_gameOptions.currentTurnNo & 1 ? 'B' : 'W');
 }
 
@@ -184,6 +238,41 @@ void Chess::GenerateKingMoves(std::vector<Move>& moves, int row, int col) {
 		int toRow = row + rowOffsets[i];
 		int toCol = col + colOffsets[i];
 		addMoveIfValid(moves, row, col, toRow, toCol);
+	}
+
+	// castling
+	if (pieceNotation(row, col) == 'K') {
+		if (m_WhiteCastleKingSide) {
+			if (pieceNotation(row, col + 1) == '0' && pieceNotation(row, col + 2) == '0') {
+				if (pieceNotation(row, col + 3) == 'R') {
+					moves.push_back({ indexToNotation(row, col), indexToNotation(row, col + 2) });
+				}
+			}
+		}
+
+		if (m_WhiteCastleQueenSide) {
+			if (pieceNotation(row, col - 1) == '0' && pieceNotation(row, col - 2) == '0' && pieceNotation(row, col - 3) == '0') {
+				if (pieceNotation(row, col - 4) == 'R') {
+					moves.push_back({ indexToNotation(row, col), indexToNotation(row, col - 2) });
+				}
+			}
+		}
+	} else {
+		if (m_BlackCastleKingSide) {
+			if (pieceNotation(row, col + 1) == '0' && pieceNotation(row, col + 2) == '0') {
+				if (pieceNotation(row, col + 3) == 'r') {
+					moves.push_back({ indexToNotation(row, col), indexToNotation(row, col + 2) });
+				}
+			}
+		}
+
+		if (m_BlackCastleQueenSide) {
+			if (pieceNotation(row, col - 1) == '0' && pieceNotation(row, col - 2) == '0' && pieceNotation(row, col - 3) == '0') {
+				if (pieceNotation(row, col - 4) == 'r') {
+					moves.push_back({ indexToNotation(row, col), indexToNotation(row, col - 2) });
+				}
+			}
+		}
 	}
 }
 
@@ -367,15 +456,59 @@ void Chess::setStateString(const std::string& s) {
 		}
 	}
 
-	// auto state = s.substr(s.find(' ') + 1);
-	// LOG("state string is {}", LogLevel::INFO, state);
-	// GenerateMoves(std::toupper(state.front()));
+	LOG("{} rest of stream", LogLevel::INFO, s.substr(s.find(' ') + 1));
+	auto globalBoardState = s.substr(s.find(' ') + 1);
+	// Parse the current player
+	char currentPlayer = globalBoardState[0];
+	globalBoardState = globalBoardState.substr(2);
+	if (globalBoardState[0] == '-') {
+		globalBoardState = globalBoardState.substr(2);
+	} else {
+		// Parse the castling state
+		if (globalBoardState[0] == 'K') {
+			m_WhiteCastleKingSide = true;
+			globalBoardState = globalBoardState.substr(1);
+		} else {
+			m_WhiteCastleKingSide = false;
+		}
 
-	// auto castlingState = state.substr(state.find(' ') + 1);
-	// LOG("castling state is {}", LogLevel::INFO, castlingState);
-	// startGame();
+		if (globalBoardState[0] == 'Q') {
+			m_WhiteCastleQueenSide = true;
+			globalBoardState = globalBoardState.substr(1);
+		} else {
+			m_WhiteCastleQueenSide = false;
+		}
 
-	// Need to deal with this later
+		if (globalBoardState[0] == 'k') {
+			m_BlackCastleKingSide = true;
+			globalBoardState = globalBoardState.substr(1);
+		} else {
+			m_BlackCastleKingSide = false;
+		}
+
+		if (globalBoardState[0] == 'q') {
+			m_BlackCastleQueenSide = true;
+			globalBoardState = globalBoardState.substr(1);
+		} else {
+			m_BlackCastleQueenSide = false;
+		}
+	}
+	if (globalBoardState[0] == ' ') globalBoardState = globalBoardState.substr(1);
 	
+	// need to parse the en passant state
+	if (globalBoardState[0] == '-') {
+		globalBoardState = globalBoardState.substr(2);
+	} else {
+		// parse state based on algebraic notation of the square that can be taken.
+	}
+
+	// ignore the half move clock
+	globalBoardState = globalBoardState.substr(globalBoardState.find(' ') + 1);
+
+	LOG("Cur ({})", LogLevel::INFO, currentPlayer);
+
+	// Parse the castling state
+
+	GenerateMoves(std::toupper('W'));
 }
 

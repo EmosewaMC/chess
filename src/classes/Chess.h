@@ -71,6 +71,10 @@ private:
 
 	ChessBoard m_Board;
 	std::vector<Move> _moves;
+	bool m_BlackCastleKingSide = true;
+	bool m_BlackCastleQueenSide = true;
+	bool m_WhiteCastleKingSide = true;
+	bool m_WhiteCastleQueenSide = true;
 };
 
 #endif  //!__CHESS__H__
