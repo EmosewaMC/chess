@@ -39,7 +39,6 @@ void Chess::Reset() {
 	m_WhiteCastleQueenSide = true;
 	m_EnPassantSquare = "-";
 
-	LOG("", LogLevel::INFO);
 	srand((unsigned int)time(0));
 	setNumberOfPlayers(2);
 	// this allows us to draw the board correctly
@@ -185,17 +184,25 @@ void Chess::bitMovedFromTo(Bit& bit, BitHolder& src, BitHolder& dst) {
 		m_BlackCastleQueenSide = false;
 	}
 
+	if (m_EnPassantSquare != "") {
+		if (dstSquare.getNotation() == m_EnPassantSquare) {
+			if (dstSquare.bit() && dstSquare.bit()->gameTag() == 'P') {
+				m_Board.GetSquareAt(dstSquare.getColumn() + 1, dstSquare.getRow()).destroyBit();
+			} else if (dstSquare.bit() && dstSquare.bit()->gameTag() == 'p') {
+				m_Board.GetSquareAt(dstSquare.getColumn() - 1, dstSquare.getRow()).destroyBit();
+			}
+		}
+	}
+
 	// write the en passant square if the move was a pawn move of 2 squares
 	// i have no clue why, but column and row are reversed, but it works so meh
-	LOG("src {} dst {}", LogLevel::INFO, srcSquare.getColumn(), dstSquare.getColumn());
 	if (dstSquare.bit() && dstSquare.bit()->gameTag() == 'p' && dstSquare.getColumn() == 3 && srcSquare.getColumn() == 1) {
 		m_EnPassantSquare = indexToNotation(dstSquare.getColumn() - 1, dstSquare.getRow());
 	} else if (dstSquare.bit() && dstSquare.bit()->gameTag() == 'P' && dstSquare.getColumn() == 4 && srcSquare.getColumn() == 6) {
 		m_EnPassantSquare = indexToNotation(dstSquare.getColumn() + 1, dstSquare.getRow());
 	} else {
-		m_EnPassantSquare = "-";
+		m_EnPassantSquare = "";
 	}
-	LOG("En passant square {}", LogLevel::INFO, m_EnPassantSquare);
 
 	GenerateMoves(_gameOptions.currentTurnNo & 1 ? 'B' : 'W');
 }
@@ -330,13 +337,24 @@ void Chess::GeneratePawnMoves(std::vector<Move>& moves, int row, int col, char c
 	}
 
 	// en passant
-	if (row == 3 && color == 'W') {
-		if (col + 1 < ChessBoard::Size && pieceNotation(row, col + 1) == 'p' && m_EnPassantSquare == indexToNotation(row, col + 1)) {
-			addMoveIfValid(moves, row, col, row + forward, col + 1);
-		}
-
-		if (col - 1 >= 0 && pieceNotation(row, col - 1) == 'p' && m_EnPassantSquare == indexToNotation(row, col - 1)) {
-			addMoveIfValid(moves, row, col, row + forward, col - 1);
+	if (m_EnPassantSquare != "") {
+		int targetRow = row + forward;
+		int leftCol = col - 1;
+		int rightCol = col + 1;
+		if (targetRow == 2 && color == 'W') {
+			if (m_EnPassantSquare[0] == 'a' + leftCol && m_EnPassantSquare[1] == '8' - targetRow) {
+				addMoveIfValid(moves, row, col, targetRow, leftCol);
+			}
+			if (m_EnPassantSquare[0] == 'a' + rightCol && m_EnPassantSquare[1] == '8' - targetRow) {
+				addMoveIfValid(moves, row, col, targetRow, rightCol);
+			}
+		} else if (targetRow == 5 && color == 'B') {
+			if (m_EnPassantSquare[0] == 'a' + leftCol && m_EnPassantSquare[1] == '8' - targetRow) {
+				addMoveIfValid(moves, row, col, targetRow, leftCol);
+			}
+			if (m_EnPassantSquare[0] == 'a' + rightCol && m_EnPassantSquare[1] == '8' - targetRow) {
+				addMoveIfValid(moves, row, col, targetRow, rightCol);
+			}
 		}
 	}
 }
@@ -467,7 +485,6 @@ void Chess::setStateString(const std::string& s) {
 			if (std::isdigit(c)) {
 				file += c - '0';
 			} else if (pieceTextures.find(c) != pieceTextures.end()) {
-				LOG("piece {} is going at {}", LogLevel::INFO, c, rank + file * 8);
 				m_Board[rank + file * 8].setBit(PieceForPlayer(c >= 'a' ? 0 : 1, c, pieceTextures[c]));
 				m_Board[rank + file * 8].bit()->setPosition(m_Board[rank + file * 8].getPosition());
 				file++;
@@ -480,7 +497,6 @@ void Chess::setStateString(const std::string& s) {
 		}
 	}
 
-	LOG("{} rest of stream", LogLevel::INFO, s.substr(s.find(' ') + 1));
 	auto globalBoardState = s.substr(s.find(' ') + 1);
 	// Parse the current player
 	char currentPlayer = globalBoardState[0];
@@ -526,14 +542,13 @@ void Chess::setStateString(const std::string& s) {
 		// parse state based on algebraic notation of the square that can be taken.
 		m_EnPassantSquare = globalBoardState.substr(0, 2);
 	}
-	LOG("En passant square {}", LogLevel::INFO, m_EnPassantSquare);
 	// ignore the half move clock
 	globalBoardState = globalBoardState.substr(globalBoardState.find(' ') + 1);
 
-	LOG("Cur ({})", LogLevel::INFO, currentPlayer);
 
 	// Parse the castling state
 
-	GenerateMoves(std::toupper('W'));
+	GenerateMoves(static_cast<char>(std::toupper(currentPlayer)));
+	_gameOptions.currentTurnNo = currentPlayer == 'W' ? 0 : 1;
 }
 

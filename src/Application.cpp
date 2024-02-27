@@ -18,7 +18,7 @@ void ClassGame::GameStartUp() {
 	GameGlobal::logger = std::make_unique<Logger>("Chess_" + std::to_string(time(0)) + ".log");
 	LOG("Started up game", LogLevel::INFO);
 	game.Reset();
-	game.setStateString("r3k2r/1b4bq/8/8/8/8/7B/R3K2R w KQkq - 0 1");
+	game.setStateString("rnbqkbnr/ppp1pppp/8/8/3pP3/8/PPPP1PPP/RNBQKBNR b KQkq e3 0 1");
 	gameWinner = -1;
 }
 
