@@ -75,6 +75,7 @@ private:
 	bool m_BlackCastleQueenSide = true;
 	bool m_WhiteCastleKingSide = true;
 	bool m_WhiteCastleQueenSide = true;
+	std::string m_EnPassantSquare = "";
 };
 
 #endif  //!__CHESS__H__

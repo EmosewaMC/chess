@@ -37,6 +37,7 @@ void Chess::Reset() {
 	m_BlackCastleQueenSide = true;
 	m_WhiteCastleKingSide = true;
 	m_WhiteCastleQueenSide = true;
+	m_EnPassantSquare = "-";
 
 	LOG("", LogLevel::INFO);
 	srand((unsigned int)time(0));
@@ -183,6 +184,19 @@ void Chess::bitMovedFromTo(Bit& bit, BitHolder& src, BitHolder& dst) {
 		m_BlackCastleKingSide = false;
 		m_BlackCastleQueenSide = false;
 	}
+
+	// write the en passant square if the move was a pawn move of 2 squares
+	// i have no clue why, but column and row are reversed, but it works so meh
+	LOG("src {} dst {}", LogLevel::INFO, srcSquare.getColumn(), dstSquare.getColumn());
+	if (dstSquare.bit() && dstSquare.bit()->gameTag() == 'p' && dstSquare.getColumn() == 3 && srcSquare.getColumn() == 1) {
+		m_EnPassantSquare = indexToNotation(dstSquare.getColumn() - 1, dstSquare.getRow());
+	} else if (dstSquare.bit() && dstSquare.bit()->gameTag() == 'P' && dstSquare.getColumn() == 4 && srcSquare.getColumn() == 6) {
+		m_EnPassantSquare = indexToNotation(dstSquare.getColumn() + 1, dstSquare.getRow());
+	} else {
+		m_EnPassantSquare = "-";
+	}
+	LOG("En passant square {}", LogLevel::INFO, m_EnPassantSquare);
+
 	GenerateMoves(_gameOptions.currentTurnNo & 1 ? 'B' : 'W');
 }
 
@@ -315,6 +329,16 @@ void Chess::GeneratePawnMoves(std::vector<Move>& moves, int row, int col, char c
 		}
 	}
 
+	// en passant
+	if (row == 3 && color == 'W') {
+		if (col + 1 < ChessBoard::Size && pieceNotation(row, col + 1) == 'p' && m_EnPassantSquare == indexToNotation(row, col + 1)) {
+			addMoveIfValid(moves, row, col, row + forward, col + 1);
+		}
+
+		if (col - 1 >= 0 && pieceNotation(row, col - 1) == 'p' && m_EnPassantSquare == indexToNotation(row, col - 1)) {
+			addMoveIfValid(moves, row, col, row + forward, col - 1);
+		}
+	}
 }
 
 void Chess::GenerateMoves(char color) {
@@ -500,8 +524,9 @@ void Chess::setStateString(const std::string& s) {
 		globalBoardState = globalBoardState.substr(2);
 	} else {
 		// parse state based on algebraic notation of the square that can be taken.
+		m_EnPassantSquare = globalBoardState.substr(0, 2);
 	}
-
+	LOG("En passant square {}", LogLevel::INFO, m_EnPassantSquare);
 	// ignore the half move clock
 	globalBoardState = globalBoardState.substr(globalBoardState.find(' ') + 1);
 
