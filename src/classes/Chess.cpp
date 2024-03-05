@@ -560,29 +560,37 @@ void Chess::setStateString(const std::string& s) {
 	_moves = GenerateMoves(stateString(), static_cast<char>(std::toupper(currentPlayer)));
 	_gameOptions.currentTurnNo = currentPlayer == 'W' ? 0 : 1;
 }
-
+static int f = 0;
 void Chess::updateAI() {
 	auto copyState = stateString();
-	int bestMoveValue = INT_MIN;
+	int bestMoveValue = -99'999;
 	Move bestMove;
-
+	copyState.erase(std::remove(copyState.begin(), copyState.end(), '\n'), copyState.end());
 	for (auto& move : _moves) {
+		f = 0;
 		auto state = copyState;
 		int srcSquare = notationToIndex(move.from);
 		int dstSquare = notationToIndex(move.to);
-		state[dstSquare] = state[srcSquare];
-		state[srcSquare] = '0';
-		int bestValue = -negamax(state, 3, INT_MIN, INT_MAX, 1); // replace with negamax call
+		state[(dstSquare % 8 * 8) + (dstSquare / 8)] = state[(srcSquare % 8 * 8) + (srcSquare / 8)];
+		state[(srcSquare % 8 * 8) + (srcSquare / 8)] = '0';
+		int bestValue = -negamax(state, 4, -99'999, 99'999, 1); // replace with negamax call
 		// LOG("Value {}", LogLevel::INFO, bestValue);
 		if (bestValue > bestMoveValue) {
 			bestMoveValue = bestValue;
 			bestMove = move;
 		}
 	}
-	LOG("Best move from {} to {}", LogLevel::INFO, bestMove.from, bestMove.to);
-
+	LOG("{} searches", LogLevel::INFO, f);
 	if (bestMove.from != "" && bestMove.to != "") {
 		// Do the move
+		int srcSquare = notationToIndex(bestMove.from);
+		int dstSquare = notationToIndex(bestMove.to);
+		auto& src = m_Board[srcSquare];
+		auto& dst = m_Board[dstSquare];
+		auto* bit = src.bit();
+		dst.dropBitAtPoint(bit, ImVec2(0, 0));
+		src.setBit(nullptr);
+		bitMovedFromTo(*bit, src, dst);
 	}
 }
 
@@ -607,24 +615,21 @@ int Chess::EvaluateBoard(const std::string& state) {
 }
 
 int Chess::negamax(std::string state, int depth, int alpha, int beta, int color) {
-	int score = EvaluateBoard(state);
-	if (depth == 0) return score * color;
+	f++;
+	if (depth == 0) return EvaluateBoard(state) * color;
 
-	int bestValue = INT_MIN;
+	int bestValue = -99'999;
 	auto moves = GenerateMoves(state, color == 1 ? 'W' : 'B');
 
 	for (const auto& move : moves) {
+		auto copiedState = state;
 		int srcSquare = notationToIndex(move.from);
 		int dstSquare = notationToIndex(move.to);
-		auto savedMove = state[dstSquare];
-		state[dstSquare] = state[srcSquare];
-		state[srcSquare] = '0';
-		bestValue = std::max(bestValue, -negamax(state, depth - 1, -beta, -alpha, -color));
+		copiedState[(dstSquare % 8 * 8) + (dstSquare / 8)] = copiedState[(srcSquare % 8 * 8) + (srcSquare / 8)];
+		copiedState[(srcSquare % 8 * 8) + (srcSquare / 8)] = '0';
+		bestValue = std::max(bestValue, -negamax(copiedState, depth - 1, -beta, -alpha, -color));
 		alpha = std::max(alpha, bestValue);
-		state[srcSquare] = state[dstSquare];
-		state[dstSquare] = savedMove;
-		if (alpha > beta) break;
+		if (alpha >= beta) break;
 	}
-
 	return bestValue;
 }
