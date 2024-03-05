@@ -54,20 +54,23 @@ public:
 	void bitMovedFromTo(Bit& bit, BitHolder& src, BitHolder& dst) override;
 	void stopGame() override;
 	BitHolder& getHolderAt(const int x, const int y) override { return m_Board.GetSquareAt(y, x); }
+	void updateAI() override;
 private:
 	char pieceNotation(int row, int col);
 	Bit* PieceForPlayer(const int playerNumber, const char tag, const std::string_view texture);
 	Player* ownerAt(int index);
 	void    scanForMouse();
-	void GenerateMoves(char color);
-	void addMoveIfValid(std::vector<Move>& moves, const int fromRow, const int fromColumn, const int toRow, const int toColumn);
-	void GenerateKnightMoves(std::vector<Move>& moves, int row, int col);
-	void GenerateLinearMoves(std::vector<Move>& moves, int row, int col, std::vector<std::pair<int, int>> directions);
-	void GenerateBishopMoves(std::vector<Move>& moves, int row, int col);
-	void GenerateRookMoves(std::vector<Move>& moves, int row, int col);
-	void GenerateQueenMoves(std::vector<Move>& moves, int row, int col);
-	void GenerateKingMoves(std::vector<Move>& moves, int row, int col);
-	void GeneratePawnMoves(std::vector<Move>& moves, int row, int col, char color);
+	std::vector<Move> GenerateMoves(std::string state, char color);
+	void addMoveIfValid(std::vector<Move>& moves, const std::string& state, const int fromRow, const int fromColumn, const int toRow, const int toColumn);
+	void GenerateKnightMoves(std::vector<Move>& moves, const std::string& state, int row, int col);
+	void GenerateLinearMoves(std::vector<Move>& moves, const std::string& state, int row, int col, std::vector<std::pair<int, int>> directions);
+	void GenerateBishopMoves(std::vector<Move>& moves, const std::string& state, int row, int col);
+	void GenerateRookMoves(std::vector<Move>& moves, const std::string& state, int row, int col);
+	void GenerateQueenMoves(std::vector<Move>& moves, const std::string& state, int row, int col);
+	void GenerateKingMoves(std::vector<Move>& moves, const std::string& state, int row, int col);
+	void GeneratePawnMoves(std::vector<Move>& moves, const std::string& state, int row, int col, char color);
+	int EvaluateBoard(const std::string& state);
+	int negamax(std::string state, int depth, int alpha, int beta, int color);
 
 	ChessBoard m_Board;
 	std::vector<Move> _moves;

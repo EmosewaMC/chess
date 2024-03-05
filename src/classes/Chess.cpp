@@ -5,18 +5,20 @@
 
 std::string indexToNotation(int row, int col);
 
-namespace {
-	char pieceNotation(ChessSquare& square) {
-		auto* bit = square.bit();
-		return bit ? static_cast<char>(bit->gameTag()) : '0';
-	}
-};
+char pieceNotation(ChessSquare& square) {
+	auto* bit = square.bit();
+	return bit ? static_cast<char>(bit->gameTag()) : '0';
+}
 
 char Chess::pieceNotation(int rank, int file) {
 	if (rank < 0 || rank >= ChessBoard::Size || file < 0 || file >= ChessBoard::Size) {
 		return '0';
 	}
 	return ::pieceNotation(m_Board.GetSquareAt(rank, file));
+}
+
+char pieceNotation(std::string state, int row, int col) {
+	return state[row * ChessBoard::Size + col];
 }
 
 //
@@ -44,6 +46,7 @@ void Chess::Reset() {
 	// this allows us to draw the board correctly
 	_gameOptions.rowX = ChessBoard::Size;
 	_gameOptions.rowY = ChessBoard::Size;
+	_gameOptions.AIPlayer = 1;
 	// setup the board
 	for (int y = 0; y < ChessBoard::NumberOfSquares; y++) {
 		m_Board[y].initHolder(ImVec2(100 * static_cast<float>(y / ChessBoard::Size) + 100, 100 * static_cast<float>(y % ChessBoard::Size) + 100), "assets/chess/boardsquare.png", y % ChessBoard::Size, y / ChessBoard::Size);
@@ -106,7 +109,7 @@ void Chess::Reset() {
 	}
 	// setup up turns etc.
 	startGame();
-	GenerateMoves('W');
+	_moves = GenerateMoves(stateString(), 'W');
 }
 
 bool Chess::canBitMoveFrom(Bit& bit, BitHolder& src) {
@@ -204,7 +207,11 @@ void Chess::bitMovedFromTo(Bit& bit, BitHolder& src, BitHolder& dst) {
 		m_EnPassantSquare = "";
 	}
 
-	GenerateMoves(_gameOptions.currentTurnNo & 1 ? 'B' : 'W');
+	_moves = GenerateMoves(stateString(), _gameOptions.currentTurnNo & 1 ? 'B' : 'W');
+}
+
+int notationToIndex(const std::string& notation) {
+	return (notation[0] - 'a') * ChessBoard::Size + ('8' - notation[1]);
 }
 
 std::string indexToNotation(int row, int col) {
@@ -214,10 +221,10 @@ std::string indexToNotation(int row, int col) {
 	return notation;
 }
 
-void Chess::addMoveIfValid(std::vector<Move>& moves, const int fromRow, const int fromColumn, const int toRow, const int toColumn) {
+void Chess::addMoveIfValid(std::vector<Move>& moves, const std::string& state, const int fromRow, const int fromColumn, const int toRow, const int toColumn) {
 	if (toRow >= 0 && toRow < ChessBoard::Size && toColumn >= 0 && toColumn < ChessBoard::Size) {
-		auto fromNotation = pieceNotation(fromRow, fromColumn);
-		auto toNotation = pieceNotation(toRow, toColumn);
+		auto fromNotation = ::pieceNotation(state, fromRow, fromColumn);
+		auto toNotation = ::pieceNotation(state, toRow, toColumn);
 
 		if (toNotation == '0' || std::isupper(fromNotation) != std::isupper(toNotation)) {
 			moves.push_back({ indexToNotation(fromRow, fromColumn), indexToNotation(toRow, toColumn) });
@@ -225,71 +232,71 @@ void Chess::addMoveIfValid(std::vector<Move>& moves, const int fromRow, const in
 	}
 }
 
-void Chess::GenerateBishopMoves(std::vector<Move>& moves, int row, int col) {
+void Chess::GenerateBishopMoves(std::vector<Move>& moves, const std::string& state, int row, int col) {
 	static const std::vector<std::pair<int, int>> directions = { { +1, +1 }, { +1, -1 }, { -1, +1 }, { -1, -1 } };
-	GenerateLinearMoves(moves, row, col, directions);
+	GenerateLinearMoves(moves, state, row, col, directions);
 }
 
-void Chess::GenerateRookMoves(std::vector<Move>& moves, int row, int col) {
+void Chess::GenerateRookMoves(std::vector<Move>& moves, const std::string& state, int row, int col) {
 	static const std::vector<std::pair<int, int>> directions = { { +1, 0 }, { -1, 0 }, { 0, +1 }, { 0, -1 } };
-	GenerateLinearMoves(moves, row, col, directions);
+	GenerateLinearMoves(moves, state, row, col, directions);
 }
 
-void Chess::GenerateQueenMoves(std::vector<Move>& moves, int row, int col) {
-	GenerateBishopMoves(moves, row, col);
-	GenerateRookMoves(moves, row, col);
+void Chess::GenerateQueenMoves(std::vector<Move>& moves, const std::string& state, int row, int col) {
+	GenerateBishopMoves(moves, state, row, col);
+	GenerateRookMoves(moves, state, row, col);
 }
 
-void Chess::GenerateKnightMoves(std::vector<Move>& moves, int row, int col) {
+void Chess::GenerateKnightMoves(std::vector<Move>& moves, const std::string& state, int row, int col) {
 	static const int rowOffsets[] = { -2, -2, +2, +2, +1, +1, -1, -1 };
 	static const int colOffsets[] = { +1, -1, +1, -1, +2, -2, +2, -2 };
 
 	for (int i = 0; i < 8; i++) {
 		int toRow = row + rowOffsets[i];
 		int toCol = col + colOffsets[i];
-		addMoveIfValid(moves, row, col, toRow, toCol);
+		addMoveIfValid(moves, state, row, col, toRow, toCol);
 	}
 }
 
-void Chess::GenerateKingMoves(std::vector<Move>& moves, int row, int col) {
+void Chess::GenerateKingMoves(std::vector<Move>& moves, const std::string& state, int row, int col) {
 	static const int rowOffsets[] = { -1, -1, -1,  0,  0, +1, +1, +1 };
 	static const int colOffsets[] = { -1,  0, +1, -1, +1, -1,  0, +1 };
 
 	for (int i = 0; i < 8; i++) {
 		int toRow = row + rowOffsets[i];
 		int toCol = col + colOffsets[i];
-		addMoveIfValid(moves, row, col, toRow, toCol);
+		addMoveIfValid(moves, state, row, col, toRow, toCol);
 	}
 
 	// castling
-	if (pieceNotation(row, col) == 'K') {
+	if (::pieceNotation(state, row, col) == 'K') {
 		if (m_WhiteCastleKingSide) {
-			if (pieceNotation(row, col + 1) == '0' && pieceNotation(row, col + 2) == '0') {
-				if (pieceNotation(row, col + 3) == 'R') {
+			if (::pieceNotation(state, row, col + 1) == '0' && ::pieceNotation(state, row, col + 2) == '0') {
+				if (::pieceNotation(state, row, col + 3) == 'R') {
 					moves.push_back({ indexToNotation(row, col), indexToNotation(row, col + 2) });
 				}
 			}
 		}
 
 		if (m_WhiteCastleQueenSide) {
-			if (pieceNotation(row, col - 1) == '0' && pieceNotation(row, col - 2) == '0' && pieceNotation(row, col - 3) == '0') {
-				if (pieceNotation(row, col - 4) == 'R') {
+			if (::pieceNotation(state, row, col - 1) == '0' && ::pieceNotation(state, row, col - 2) == '0' && ::pieceNotation(state, row, col - 3) == '0') {
+				if (::pieceNotation(state, row, col - 4) == 'R') {
 					moves.push_back({ indexToNotation(row, col), indexToNotation(row, col - 2) });
 				}
 			}
 		}
 	} else {
 		if (m_BlackCastleKingSide) {
-			if (pieceNotation(row, col + 1) == '0' && pieceNotation(row, col + 2) == '0') {
-				if (pieceNotation(row, col + 3) == 'r') {
+			if (::pieceNotation(state, row, col + 1) == '0' && ::pieceNotation(state, row, col + 2) == '0') {
+				if (::pieceNotation(state, row, col + 3) == 'r') {
 					moves.push_back({ indexToNotation(row, col), indexToNotation(row, col + 2) });
 				}
 			}
 		}
 
 		if (m_BlackCastleQueenSide) {
-			if (pieceNotation(row, col - 1) == '0' && pieceNotation(row, col - 2) == '0' && pieceNotation(row, col - 3) == '0') {
-				if (pieceNotation(row, col - 4) == 'r') {
+			if (::pieceNotation(state, row, col - 1) == '0' && ::pieceNotation(state, row, col - 2) == '0' && ::pieceNotation(state, row, col - 3) == '0') {
+				if (::pieceNotation(state, row, col - 4) == 'r') {
 					moves.push_back({ indexToNotation(row, col), indexToNotation(row, col - 2) });
 				}
 			}
@@ -297,42 +304,42 @@ void Chess::GenerateKingMoves(std::vector<Move>& moves, int row, int col) {
 	}
 }
 
-void Chess::GenerateLinearMoves(std::vector<Move>& moves, int row, int col, std::vector<std::pair<int, int>> directions) {
+void Chess::GenerateLinearMoves(std::vector<Move>& moves, const std::string& state, int row, int col, std::vector<std::pair<int, int>> directions) {
 	for (auto& direction : directions) {
 		int toRow = row + direction.first;
 		int toCol = col + direction.second;
 		while (toRow >= 0 && toRow < ChessBoard::Size && toCol >= 0 && toCol < ChessBoard::Size) {
-			if (pieceNotation(toRow, toCol) != '0') {
-				addMoveIfValid(moves, row, col, toRow, toCol);
+			if (::pieceNotation(state, toRow, toCol) != '0') {
+				addMoveIfValid(moves, state, row, col, toRow, toCol);
 				break;
 			}
-			addMoveIfValid(moves, row, col, toRow, toCol);
+			addMoveIfValid(moves, state, row, col, toRow, toCol);
 			toRow += direction.first;
 			toCol += direction.second;
 		}
 	}
 }
 
-void Chess::GeneratePawnMoves(std::vector<Move>& moves, int row, int col, char color) {
+void Chess::GeneratePawnMoves(std::vector<Move>& moves, const std::string& state, int row, int col, char color) {
 	// first add the forward moves
 	int forward = color == 'W' ? -1 : 1;
-	if (row + forward >= 0 && row + forward < ChessBoard::Size && pieceNotation(row + forward, col) == '0') {
-		addMoveIfValid(moves, row, col, row + forward, col);
-		if ((row == 1 && pieceNotation(row + forward * 2, col) == '0') || (row == 6 && pieceNotation(row + forward * 2, col) == '0')) {
-			addMoveIfValid(moves, row, col, row + forward * 2, col);
+	if (row + forward >= 0 && row + forward < ChessBoard::Size && ::pieceNotation(state, row + forward, col) == '0') {
+		addMoveIfValid(moves, state, row, col, row + forward, col);
+		if ((row == 1 && ::pieceNotation(state, row + forward * 2, col) == '0') || (row == 6 && ::pieceNotation(state, row + forward * 2, col) == '0')) {
+			addMoveIfValid(moves, state, row, col, row + forward * 2, col);
 		}
 	}
 
 	// now add the attack moves
 	if (row + forward >= 0 && row + forward < ChessBoard::Size && col + 1 < ChessBoard::Size) {
-		if (pieceNotation(row + forward, col + 1) != '0') {
-			addMoveIfValid(moves, row, col, row + forward, col + 1);
+		if (::pieceNotation(state, row + forward, col + 1) != '0') {
+			addMoveIfValid(moves, state, row, col, row + forward, col + 1);
 		}
 	}
 
 	if (row + forward >= 0 && row + forward < ChessBoard::Size && col - 1 >= 0) {
-		if (pieceNotation(row + forward, col - 1) != '0') {
-			addMoveIfValid(moves, row, col, row + forward, col - 1);
+		if (::pieceNotation(state, row + forward, col - 1) != '0') {
+			addMoveIfValid(moves, state, row, col, row + forward, col - 1);
 		}
 	}
 
@@ -343,58 +350,60 @@ void Chess::GeneratePawnMoves(std::vector<Move>& moves, int row, int col, char c
 		int rightCol = col + 1;
 		if (targetRow == 2 && color == 'W') {
 			if (m_EnPassantSquare[0] == 'a' + leftCol && m_EnPassantSquare[1] == '8' - targetRow) {
-				addMoveIfValid(moves, row, col, targetRow, leftCol);
+				addMoveIfValid(moves, state, row, col, targetRow, leftCol);
 			}
 			if (m_EnPassantSquare[0] == 'a' + rightCol && m_EnPassantSquare[1] == '8' - targetRow) {
-				addMoveIfValid(moves, row, col, targetRow, rightCol);
+				addMoveIfValid(moves, state, row, col, targetRow, rightCol);
 			}
 		} else if (targetRow == 5 && color == 'B') {
 			if (m_EnPassantSquare[0] == 'a' + leftCol && m_EnPassantSquare[1] == '8' - targetRow) {
-				addMoveIfValid(moves, row, col, targetRow, leftCol);
+				addMoveIfValid(moves, state, row, col, targetRow, leftCol);
 			}
 			if (m_EnPassantSquare[0] == 'a' + rightCol && m_EnPassantSquare[1] == '8' - targetRow) {
-				addMoveIfValid(moves, row, col, targetRow, rightCol);
+				addMoveIfValid(moves, state, row, col, targetRow, rightCol);
 			}
 		}
 	}
 }
 
-void Chess::GenerateMoves(char color) {
-	_moves.clear();
+std::vector<Move> Chess::GenerateMoves(std::string state, char color) {
+	std::vector<Move> moves;
+	state.erase(std::remove(state.begin(), state.end(), '\n'), state.end());
 	const bool isUpper = color == 'W';
 	for (int col = 0; col < ChessBoard::Size; col++) {
 		for (int row = 0; row < ChessBoard::Size; row++) {
-			char piece = pieceNotation(row, col);
+			char piece = ::pieceNotation(state, row, col);
 			if (piece != '0' && static_cast<bool>(std::isupper(piece)) == isUpper) {
 				switch (piece) {
 				case 'P':
 				case 'p':
-					GeneratePawnMoves(_moves, row, col, color);
+					GeneratePawnMoves(moves, state, row, col, color);
 					break;
 				case 'R':
 				case 'r':
-					GenerateRookMoves(_moves, row, col);
+					GenerateRookMoves(moves, state, row, col);
 					break;
 				case 'N':
 				case 'n':
-					GenerateKnightMoves(_moves, row, col);
+					GenerateKnightMoves(moves, state, row, col);
 					break;
 				case 'B':
 				case 'b':
-					GenerateBishopMoves(_moves, row, col);
+					GenerateBishopMoves(moves, state, row, col);
 					break;
 				case 'Q':
 				case 'q':
-					GenerateQueenMoves(_moves, row, col);
+					GenerateQueenMoves(moves, state, row, col);
 					break;
 				case 'K':
 				case 'k':
-					GenerateKingMoves(_moves, row, col);
+					GenerateKingMoves(moves, state, row, col);
 					break;
 				}
 			}
 		}
 	}
+	return moves;
 }
 //
 // free all the memory used by the game on the heap
@@ -548,7 +557,62 @@ void Chess::setStateString(const std::string& s) {
 
 	// Parse the castling state
 
-	GenerateMoves(static_cast<char>(std::toupper(currentPlayer)));
+	_moves = GenerateMoves(stateString(), static_cast<char>(std::toupper(currentPlayer)));
 	_gameOptions.currentTurnNo = currentPlayer == 'W' ? 0 : 1;
 }
 
+void Chess::updateAI() {
+	auto copyState = stateString();
+	LOG("{}", LogLevel::INFO, copyState);
+	int bestMoveValue = INT_MIN;
+	Move bestMove;
+
+
+	for (auto& move : _moves) {
+		LOG("Move from {} to {}", LogLevel::INFO, notationToIndex(move.from), notationToIndex(move.to));
+		int srcSquare = notationToIndex(move.from);
+		int dstSquare = notationToIndex(move.to);
+		copyState[dstSquare] = copyState[srcSquare];
+		copyState[srcSquare] = '0';
+		int bestValue = 0; // replace with negamax call
+		if (bestValue > bestMoveValue) {
+			bestMoveValue = bestValue;
+			bestMove = move;
+		}
+	}
+}
+
+int Chess::EvaluateBoard(const std::string& state) {
+	static const std::map<char, int> scores{
+		{ 'P', +100 }, { 'p', -100 },
+		{ 'R', +500 }, { 'r', -500 },
+		{ 'N', +300 }, { 'n', -300 },
+		{ 'B', +300 }, { 'b', -300 },
+		{ 'Q', +900 }, { 'q', -900 },
+		{ 'K', +2000 }, { 'k', -2000 },
+		{ '0', 0 }
+	};
+
+	int toReturn = 0;
+
+	for (auto c : state) {
+		toReturn += scores.find(c)->second;
+	}
+
+	return toReturn;
+}
+
+int Chess::negamax(std::string state, int depth, int alpha, int beta, int color) {
+	int score = EvaluateBoard(state);
+	if (depth == 0) return score * color;
+
+	int bestValue = INT_MIN;
+	auto moves = GenerateMoves(state, color == 1 ? 'W' : 'B');
+	(void)state;
+	(void)alpha;
+	(void)beta;
+	(void)color;
+	(void)moves;
+	
+	return 0;
+}
