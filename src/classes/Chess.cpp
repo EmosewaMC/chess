@@ -573,7 +573,7 @@ void Chess::updateAI() {
 		int dstSquare = notationToIndex(move.to);
 		state[(dstSquare % 8 * 8) + (dstSquare / 8)] = state[(srcSquare % 8 * 8) + (srcSquare / 8)];
 		state[(srcSquare % 8 * 8) + (srcSquare / 8)] = '0';
-		int bestValue = -negamax(state, 4, -99'999, 99'999, 1); // replace with negamax call
+		int bestValue = -negamax(state, 3, -99'999, 99'999, 1); // replace with negamax call
 		// LOG("Value {}", LogLevel::INFO, bestValue);
 		if (bestValue > bestMoveValue) {
 			bestMoveValue = bestValue;
