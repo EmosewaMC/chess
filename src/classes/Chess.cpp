@@ -563,22 +563,26 @@ void Chess::setStateString(const std::string& s) {
 
 void Chess::updateAI() {
 	auto copyState = stateString();
-	LOG("{}", LogLevel::INFO, copyState);
 	int bestMoveValue = INT_MIN;
 	Move bestMove;
 
-
 	for (auto& move : _moves) {
-		LOG("Move from {} to {}", LogLevel::INFO, notationToIndex(move.from), notationToIndex(move.to));
+		auto state = copyState;
 		int srcSquare = notationToIndex(move.from);
 		int dstSquare = notationToIndex(move.to);
-		copyState[dstSquare] = copyState[srcSquare];
-		copyState[srcSquare] = '0';
-		int bestValue = 0; // replace with negamax call
+		state[dstSquare] = state[srcSquare];
+		state[srcSquare] = '0';
+		int bestValue = -negamax(state, 3, INT_MIN, INT_MAX, 1); // replace with negamax call
+		// LOG("Value {}", LogLevel::INFO, bestValue);
 		if (bestValue > bestMoveValue) {
 			bestMoveValue = bestValue;
 			bestMove = move;
 		}
+	}
+	LOG("Best move from {} to {}", LogLevel::INFO, bestMove.from, bestMove.to);
+
+	if (bestMove.from != "" && bestMove.to != "") {
+		// Do the move
 	}
 }
 
@@ -608,11 +612,19 @@ int Chess::negamax(std::string state, int depth, int alpha, int beta, int color)
 
 	int bestValue = INT_MIN;
 	auto moves = GenerateMoves(state, color == 1 ? 'W' : 'B');
-	(void)state;
-	(void)alpha;
-	(void)beta;
-	(void)color;
-	(void)moves;
-	
-	return 0;
+
+	for (const auto& move : moves) {
+		int srcSquare = notationToIndex(move.from);
+		int dstSquare = notationToIndex(move.to);
+		auto savedMove = state[dstSquare];
+		state[dstSquare] = state[srcSquare];
+		state[srcSquare] = '0';
+		bestValue = std::max(bestValue, -negamax(state, depth - 1, -beta, -alpha, -color));
+		alpha = std::max(alpha, bestValue);
+		state[srcSquare] = state[dstSquare];
+		state[dstSquare] = savedMove;
+		if (alpha > beta) break;
+	}
+
+	return bestValue;
 }

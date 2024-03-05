@@ -216,7 +216,7 @@ bool Game::actionForEmptyHolder(BitHolder& holder) {
 }
 
 bool Game::gameHasAI() {
-	return false;
+	return true;
 }
 
 void Game::updateAI() {
