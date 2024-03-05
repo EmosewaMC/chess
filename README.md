@@ -9,6 +9,9 @@ Negamax can run at least depth 3
 Implemented Evaluate Board
 AI Plays better than random
 
+My AI does well, i cant beat it even at depth 3 and with no illegal move restrictions (it'd cook me faster with them).  Efficiency is hard to measure however as I have too powerful of a desktop and I can just oonga boonga compute at it and it will just go fast.
+Moves took anywhere from a second to 3 depending on the depth.
+
 I realized very quickly into development, there is only 1 en passant square, so that simplified storage to being board wide
 Pawm promotion is a simple texture swap
 castling is a bit of hard coding, but given that the game logic is now complete, the next step for the next assignment is validity of moves (check preventing king or requiring king moves), but that is a task for next time.
