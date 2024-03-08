@@ -60,7 +60,8 @@ private:
 	Bit* PieceForPlayer(const int playerNumber, const char tag, const std::string_view texture);
 	Player* ownerAt(int index);
 	void    scanForMouse();
-	std::vector<Move> GenerateMoves(std::string state, char color);
+	std::vector<Move> GenerateMoves(std::string state, char color, bool filterMoves = false);
+	void FilterIllegalMoves(std::vector<Move>& moves, std::string state, char color);
 	void addMoveIfValid(std::vector<Move>& moves, const std::string& state, const int fromRow, const int fromColumn, const int toRow, const int toColumn);
 	void GenerateKnightMoves(std::vector<Move>& moves, const std::string& state, int row, int col);
 	void GenerateLinearMoves(std::vector<Move>& moves, const std::string& state, int row, int col, std::vector<std::pair<int, int>> directions);

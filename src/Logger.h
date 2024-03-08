@@ -14,7 +14,7 @@ enum class LogLevel : uint32_t {
 };
 
 // Logs a message to the console and to a file with the given level, the message is not logged if the verbosity level is higher than the current logging level.
-#define LOG(str, level, ...) do { GameGlobal::logger->Log(std::format(str, __VA_ARGS__), level, std::source_location::current()); } while (0)
+#define LOG(str, level, ...) do { GameGlobal::logger->Log(std::format(str, __VA_ARGS__), level, std::source_location::current()); GameGlobal::logger->Flush(); } while (0)
 
 class Logger {
 public:

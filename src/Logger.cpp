@@ -55,7 +55,7 @@ void Logger::Log(const std::string& message, const LogLevel& level, const std::s
 	char timeStr[70];
 	strftime(timeStr, sizeof(timeStr), "%d-%m-%y %H:%M:%S", time);
 
-	std::string formatted(std::format("{0}\t{1}\t\t{2}:{3}\t{4}\t\t{5}\n", timeStr, levelString, file, line, function, message));
+	std::string formatted(std::format("{0}\t{1}\t\t{2}:{3}\t{4}\n", timeStr, levelString, file, line, message));
 	fputs(formatted.c_str(), m_File);
 	puts(formatted.c_str());
 }

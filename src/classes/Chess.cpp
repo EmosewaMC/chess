@@ -2,6 +2,9 @@
 
 #include "Logger.h"
 #include "GameGlobal.h"
+#include "Evaluate.h"
+
+#define stupid_board_indexing(x) (x % 8 * 8) + (x / 8)
 
 std::string indexToNotation(int row, int col);
 
@@ -109,7 +112,7 @@ void Chess::Reset() {
 	}
 	// setup up turns etc.
 	startGame();
-	_moves = GenerateMoves(stateString(), 'W');
+	_moves = GenerateMoves(stateString(), 'W', true);
 }
 
 bool Chess::canBitMoveFrom(Bit& bit, BitHolder& src) {
@@ -207,7 +210,7 @@ void Chess::bitMovedFromTo(Bit& bit, BitHolder& src, BitHolder& dst) {
 		m_EnPassantSquare = "";
 	}
 
-	_moves = GenerateMoves(stateString(), _gameOptions.currentTurnNo & 1 ? 'B' : 'W');
+	_moves = GenerateMoves(stateString(), _gameOptions.currentTurnNo & 1 ? 'B' : 'W', true);
 }
 
 int notationToIndex(const std::string& notation) {
@@ -366,7 +369,7 @@ void Chess::GeneratePawnMoves(std::vector<Move>& moves, const std::string& state
 	}
 }
 
-std::vector<Move> Chess::GenerateMoves(std::string state, char color) {
+std::vector<Move> Chess::GenerateMoves(std::string state, char color, bool filterMoves/* = false*/) {
 	std::vector<Move> moves;
 	state.erase(std::remove(state.begin(), state.end(), '\n'), state.end());
 	const bool isUpper = color == 'W';
@@ -403,8 +406,84 @@ std::vector<Move> Chess::GenerateMoves(std::string state, char color) {
 			}
 		}
 	}
+
+	if (filterMoves) {
+		FilterIllegalMoves(moves, state, color);
+	}
+
 	return moves;
 }
+
+void Chess::FilterIllegalMoves(std::vector<Move>& moves, std::string state, char color) {
+	// find the king square
+	int kingRow = -1;
+	int kingCol = -1;
+	for (int col = 0; col < ChessBoard::Size; col++) {
+		for (int row = 0; row < ChessBoard::Size; row++) {
+			char piece = ::pieceNotation(state, row, col);
+			if (piece == (color == 'W' ? 'K' : 'k')) {
+				kingRow = row;
+				kingCol = col;
+				break;
+			}
+		}
+	}
+	int kingPos = kingRow + ChessBoard::Size * kingCol;
+
+	for (auto move = moves.begin(); move != moves.end();) {
+		int actualPos = stupid_board_indexing(kingPos);
+		bool isLegal = true;
+
+		// make the move
+		auto copiedState = state;
+		int srcSquare = notationToIndex(move->from);
+		int dstSquare = notationToIndex(move->to);
+		// Promotion check
+		auto dstSquareIndex = stupid_board_indexing(dstSquare);
+		auto srcSquareIndex = stupid_board_indexing(srcSquare);
+		if (copiedState[srcSquareIndex] == 'k' || copiedState[srcSquareIndex] == 'K') {
+			auto intermediate = srcSquareIndex;
+			if (std::abs(dstSquareIndex - srcSquareIndex) == 2) {
+				intermediate = (dstSquareIndex + srcSquareIndex) / 2;
+				copiedState[intermediate] = copiedState[srcSquareIndex];
+				copiedState[srcSquareIndex] = '0';
+				auto oppositeMoves = GenerateMoves(copiedState, color == 'W' ? 'B' : 'W');
+				actualPos = intermediate;
+				for (auto& oppositeMove : oppositeMoves) {
+					if (stupid_board_indexing(notationToIndex(oppositeMove.to)) == actualPos) {
+						isLegal = false;
+						break;
+					}
+				}
+			}
+			copiedState[dstSquareIndex] = copiedState[intermediate];
+			copiedState[intermediate] = '0';
+			actualPos = dstSquareIndex;
+		} else {
+			copiedState[dstSquareIndex] = copiedState[srcSquareIndex];
+			copiedState[srcSquareIndex] = '0';
+			if (dstSquare % 8 == 0 && copiedState[dstSquareIndex] == 'p') // Black pawn promotion
+				copiedState[dstSquareIndex] = 'q';
+			if (dstSquare % 8 == 7 && copiedState[dstSquareIndex] == 'P') { // White pawn promotion
+				copiedState[dstSquareIndex] = 'Q';
+			}
+		}
+		auto oppositeMoves = GenerateMoves(copiedState, color == 'W' ? 'B' : 'W');
+		for (auto& oppositeMove : oppositeMoves) {
+			if (stupid_board_indexing(notationToIndex(oppositeMove.to)) == actualPos) {
+				isLegal = false;
+				break;
+			}
+		}
+
+		if (isLegal) {
+			move++;
+		} else {
+			move = moves.erase(move);
+		}
+	}
+}
+
 //
 // free all the memory used by the game on the heap
 //
@@ -481,6 +560,7 @@ void Chess::setStateString(const std::string& s) {
 
 	for (auto& square : m_Board) {
 		square.destroyBit();
+		square.setGameTag('0');
 	}
 
 	int rank = 0;
@@ -510,6 +590,10 @@ void Chess::setStateString(const std::string& s) {
 	// Parse the current player
 	char currentPlayer = globalBoardState[0];
 	globalBoardState = globalBoardState.substr(2);
+	m_WhiteCastleKingSide = false;
+	m_WhiteCastleQueenSide = false;
+	m_BlackCastleKingSide = false;
+	m_BlackCastleQueenSide = false;
 	if (globalBoardState[0] == '-') {
 		globalBoardState = globalBoardState.substr(2);
 	} else {
@@ -542,8 +626,9 @@ void Chess::setStateString(const std::string& s) {
 			m_BlackCastleQueenSide = false;
 		}
 	}
+
 	if (globalBoardState[0] == ' ') globalBoardState = globalBoardState.substr(1);
-	
+
 	// need to parse the en passant state
 	if (globalBoardState[0] == '-') {
 		globalBoardState = globalBoardState.substr(2);
@@ -556,14 +641,15 @@ void Chess::setStateString(const std::string& s) {
 
 
 	// Parse the castling state
-
-	_moves = GenerateMoves(stateString(), static_cast<char>(std::toupper(currentPlayer)));
+	_moves = GenerateMoves(stateString(), static_cast<char>(std::toupper(currentPlayer)), true);
+	for (auto move : _moves) LOG("{} to {}", LogLevel::INFO, move.from, move.to);
 	_gameOptions.currentTurnNo = currentPlayer == 'W' ? 0 : 1;
 }
+
 static int f = 0;
 void Chess::updateAI() {
 	auto copyState = stateString();
-	int bestMoveValue = -99'999;
+	int bestMoveValue = -999'999;
 	Move bestMove;
 	copyState.erase(std::remove(copyState.begin(), copyState.end(), '\n'), copyState.end());
 	for (auto& move : _moves) {
@@ -574,13 +660,13 @@ void Chess::updateAI() {
 		state[(dstSquare % 8 * 8) + (dstSquare / 8)] = state[(srcSquare % 8 * 8) + (srcSquare / 8)];
 		state[(srcSquare % 8 * 8) + (srcSquare / 8)] = '0';
 		int bestValue = -negamax(state, 3, -99'999, 99'999, 1); // replace with negamax call
-		// LOG("Value {}", LogLevel::INFO, bestValue);
+		LOG("Value {}", LogLevel::INFO, bestValue);
 		if (bestValue > bestMoveValue) {
 			bestMoveValue = bestValue;
 			bestMove = move;
 		}
 	}
-	LOG("{} searches", LogLevel::INFO, f);
+	LOG("{} searches best move {} {}", LogLevel::INFO, f, bestMove.from, bestMove.to);
 	if (bestMove.from != "" && bestMove.to != "") {
 		// Do the move
 		int srcSquare = notationToIndex(bestMove.from);
@@ -591,6 +677,8 @@ void Chess::updateAI() {
 		dst.dropBitAtPoint(bit, ImVec2(0, 0));
 		src.setBit(nullptr);
 		bitMovedFromTo(*bit, src, dst);
+	} else {
+		LOG("No legal move found", LogLevel::INFO);
 	}
 }
 
@@ -611,6 +699,43 @@ int Chess::EvaluateBoard(const std::string& state) {
 		toReturn += scores.find(c)->second;
 	}
 
+	for (int i = 0; i < 64; i++) {
+		char piece = state[i];
+		int j = FLIP(i);
+		switch (piece) {
+		case 'N': // Knight
+			toReturn += knightTable[j];
+			break;
+		case 'n':
+			toReturn -= knightTable[FLIP(j)];
+			break;
+		case 'P': // Knight
+			toReturn += pawnTable[j];
+			break;
+		case 'p':
+			toReturn -= pawnTable[FLIP(j)];
+			break;
+		case 'K': // Knight
+			toReturn += kingTable[j];
+			break;
+		case 'k':
+			toReturn -= kingTable[FLIP(j)];
+			break;
+		case 'R': // Knight
+			toReturn += rookTable[j];
+			break;
+		case 'r':
+			toReturn -= rookTable[FLIP(j)];
+			break;
+		case 'Q': // Knight
+			toReturn += queenTable[j];
+			break;
+		case 'q':
+			toReturn -= queenTable[FLIP(j)];
+			break;
+		}
+	}
+
 	return toReturn;
 }
 
@@ -619,21 +744,22 @@ int Chess::negamax(std::string state, int depth, int alpha, int beta, int color)
 	if (depth == 0) return EvaluateBoard(state) * color;
 
 	int bestValue = -99'999;
-	auto moves = GenerateMoves(state, color == 1 ? 'W' : 'B');
-
+	auto moves = GenerateMoves(state, color == 1 ? 'W' : 'B', true);
+	if (moves.empty()) LOG("No legal moves found", LogLevel::INFO);
 	for (const auto& move : moves) {
 		auto copiedState = state;
 		int srcSquare = notationToIndex(move.from);
 		int dstSquare = notationToIndex(move.to);
 		// Promotion check
-		auto dstSquareIndex = (dstSquare % 8 * 8) + (dstSquare / 8);
-		auto srcSquareIndex = (srcSquare % 8 * 8) + (srcSquare / 8);
+		auto dstSquareIndex = stupid_board_indexing(dstSquare);
+		auto srcSquareIndex = stupid_board_indexing(srcSquare);
 		copiedState[dstSquareIndex] = copiedState[srcSquareIndex];
 		copiedState[srcSquareIndex] = '0';
-		if (dstSquareIndex % 8 == 0) // Black pawn promotion
+		if (dstSquare % 8 == 0 && copiedState[dstSquareIndex] == 'p') // Black pawn promotion
 			copiedState[dstSquareIndex] = 'q';
-		if (dstSquareIndex % 8 == 7) // White pawn promotion
+		if (dstSquare % 8 == 7 && copiedState[dstSquareIndex] == 'P') { // White pawn promotion
 			copiedState[dstSquareIndex] = 'Q';
+		}
 		bestValue = std::max(bestValue, -negamax(copiedState, depth - 1, -beta, -alpha, -color));
 		alpha = std::max(alpha, bestValue);
 		if (alpha >= beta) break;
