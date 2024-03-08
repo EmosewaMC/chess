@@ -80,6 +80,8 @@ private:
 	bool m_WhiteCastleKingSide = true;
 	bool m_WhiteCastleQueenSide = true;
 	std::string m_EnPassantSquare = "";
+	bool m_GameOver = false;
+	int m_WinningPlayer = -1;
 };
 
 #endif  //!__CHESS__H__

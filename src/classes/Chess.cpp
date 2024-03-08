@@ -7,6 +7,7 @@
 #define stupid_board_indexing(x) (x % 8 * 8) + (x / 8)
 
 std::string indexToNotation(int row, int col);
+int notationToIndex(const std::string& notation);
 
 char pieceNotation(ChessSquare& square) {
 	auto* bit = square.bit();
@@ -43,6 +44,8 @@ void Chess::Reset() {
 	m_WhiteCastleKingSide = true;
 	m_WhiteCastleQueenSide = true;
 	m_EnPassantSquare = "-";
+	m_GameOver = false;
+	m_WinningPlayer = -1;
 
 	srand((unsigned int)time(0));
 	setNumberOfPlayers(2);
@@ -211,6 +214,20 @@ void Chess::bitMovedFromTo(Bit& bit, BitHolder& src, BitHolder& dst) {
 	}
 
 	_moves = GenerateMoves(stateString(), _gameOptions.currentTurnNo & 1 ? 'B' : 'W', true);
+	if (_moves.empty()) {
+		// game has entered terminal state, it is either a stalemate or a draw now.
+		auto moves = GenerateMoves(stateString(), _gameOptions.currentTurnNo & 1 ? 'W' : 'B', true);
+		// if the other player can capture the king, it is checkmate
+		for (auto& move : moves) {
+			auto index = notationToIndex(move.to);
+			if (m_Board[index].gameTag() == 'K' || m_Board[index].gameTag() == 'k') {
+				// checkmate
+				m_GameOver = true;
+				m_WinningPlayer = _gameOptions.currentTurnNo & 1 ? 0 : 1;
+				break;
+			}
+		}
+	}
 }
 
 int notationToIndex(const std::string& notation) {
@@ -507,11 +524,11 @@ Player* Chess::ownerAt(int index) {
 }
 
 Player* Chess::checkForWinner() {
-	return nullptr;
+	return m_GameOver && m_WinningPlayer != -1 ? getPlayerAt(m_WinningPlayer) : nullptr;
 }
 
 bool Chess::checkForDraw() {
-	return false;
+	return m_GameOver && m_WinningPlayer == -1;
 }
 
 //
@@ -644,6 +661,20 @@ void Chess::setStateString(const std::string& s) {
 	_moves = GenerateMoves(stateString(), static_cast<char>(std::toupper(currentPlayer)), true);
 	for (auto move : _moves) LOG("{} to {}", LogLevel::INFO, move.from, move.to);
 	_gameOptions.currentTurnNo = currentPlayer == 'W' ? 0 : 1;
+	if (_moves.empty()) {
+		// game has entered terminal state, it is either a stalemate or a draw now.
+		auto moves = GenerateMoves(stateString(), _gameOptions.currentTurnNo & 1 ? 'W' : 'B', true);
+		// if the other player can capture the king, it is checkmate
+		for (auto& move : moves) {
+			auto index = notationToIndex(move.to);
+			if (m_Board[index].gameTag() == 'K' || m_Board[index].gameTag() == 'k') {
+				// checkmate
+				m_GameOver = true;
+				m_WinningPlayer = _gameOptions.currentTurnNo & 1 ? 0 : 1;
+				break;
+			}
+		}
+	}
 }
 
 static int f = 0;
@@ -679,6 +710,20 @@ void Chess::updateAI() {
 		bitMovedFromTo(*bit, src, dst);
 	} else {
 		LOG("No legal move found", LogLevel::INFO);
+		// game has entered terminal state, it is either a stalemate or a draw now.
+		auto moves = GenerateMoves(stateString(), 'W', true);
+		// if the other player can capture the king, it is checkmate
+		for (auto& move : moves) {
+			auto index = stupid_board_indexing(notationToIndex(move.to));
+			LOG("{} {} {}", LogLevel::INFO, move.to, index, m_Board[index].gameTag());
+			if (copyState[index] == 'K' || copyState[index] == 'k') {
+				// checkmate
+				m_GameOver = true;
+				m_WinningPlayer = _gameOptions.currentTurnNo & 1 ? 0 : 1;
+				ClassGame::EndOfTurn();
+				break;
+			}
+		}
 	}
 }
 
