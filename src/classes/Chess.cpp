@@ -625,8 +625,15 @@ int Chess::negamax(std::string state, int depth, int alpha, int beta, int color)
 		auto copiedState = state;
 		int srcSquare = notationToIndex(move.from);
 		int dstSquare = notationToIndex(move.to);
-		copiedState[(dstSquare % 8 * 8) + (dstSquare / 8)] = copiedState[(srcSquare % 8 * 8) + (srcSquare / 8)];
-		copiedState[(srcSquare % 8 * 8) + (srcSquare / 8)] = '0';
+		// Promotion check
+		auto dstSquareIndex = (dstSquare % 8 * 8) + (dstSquare / 8);
+		auto srcSquareIndex = (srcSquare % 8 * 8) + (srcSquare / 8);
+		copiedState[dstSquareIndex] = copiedState[srcSquareIndex];
+		copiedState[srcSquareIndex] = '0';
+		if (dstSquareIndex % 8 == 0) // Black pawn promotion
+			copiedState[dstSquareIndex] = 'q';
+		if (dstSquareIndex % 8 == 7) // White pawn promotion
+			copiedState[dstSquareIndex] = 'Q';
 		bestValue = std::max(bestValue, -negamax(copiedState, depth - 1, -beta, -alpha, -color));
 		alpha = std::max(alpha, bestValue);
 		if (alpha >= beta) break;
