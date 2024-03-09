@@ -671,8 +671,6 @@ void Chess::setStateString(const std::string& s) {
 		// game has entered terminal state, it is either a stalemate or a draw now.
 		auto moves = GenerateMoves(stateString(), _gameOptions.currentTurnNo & 1 ? 'W' : 'B', true);
 		// if the other player can capture the king, it is checkmate
-		auto state = stateString();
-		state.erase(std::remove(state.begin(), state.end(), '\n'), state.end());
 		for (auto& move : moves) {
 			auto index = notationToIndex(move.to);
 			auto bit2 = m_Board[index].bit();
