@@ -675,7 +675,7 @@ void Chess::setStateString(const std::string& s) {
 		state.erase(std::remove(state.begin(), state.end(), '\n'), state.end());
 		for (auto& move : moves) {
 			auto index = notationToIndex(move.to);
-			auto bit2 = m_Board[stupid_board_indexing(index)].bit();
+			auto bit2 = m_Board[index].bit();
 			if (!bit2) continue;
 			if (bit2->gameTag() == 'K' || bit2->gameTag() == 'k') {
 				// checkmate
@@ -727,13 +727,13 @@ void Chess::updateAI() {
 		bitMovedFromTo(*bit, src, dst);
 	} else {
 		LOG("No legal move found", LogLevel::INFO);
+		m_GameOver = true;
 		// game has entered terminal state, it is either a stalemate or a draw now.
 		auto moves = GenerateMoves(stateString(), _gameOptions.currentTurnNo & 1 ? 'W' : 'B', true);
 		// if the other player can capture the king, it is checkmate
 		for (auto& move : moves) {
-			m_GameOver = true;
 			auto index = notationToIndex(move.to);
-			auto bit2 = m_Board[stupid_board_indexing(index)].bit();
+			auto bit2 = m_Board[index].bit();
 			if (!bit2) continue;
 			if (bit2->gameTag() == 'K' || bit2->gameTag() == 'k') {
 				// checkmate
