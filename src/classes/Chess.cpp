@@ -215,15 +215,20 @@ void Chess::bitMovedFromTo(Bit& bit, BitHolder& src, BitHolder& dst) {
 
 	_moves = GenerateMoves(stateString(), _gameOptions.currentTurnNo & 1 ? 'B' : 'W', true);
 	if (_moves.empty()) {
+		m_GameOver = true;
 		// game has entered terminal state, it is either a stalemate or a draw now.
 		auto moves = GenerateMoves(stateString(), _gameOptions.currentTurnNo & 1 ? 'W' : 'B', true);
 		// if the other player can capture the king, it is checkmate
+		auto state = stateString();
+		state.erase(std::remove(state.begin(), state.end(), '\n'), state.end());
 		for (auto& move : moves) {
 			auto index = notationToIndex(move.to);
-			if (m_Board[index].gameTag() == 'K' || m_Board[index].gameTag() == 'k') {
+			auto bit2 = m_Board[index].bit();
+			if (!bit2) continue;
+			if (bit2->gameTag() == 'K' || bit2->gameTag() == 'k') {
 				// checkmate
-				m_GameOver = true;
 				m_WinningPlayer = _gameOptions.currentTurnNo & 1 ? 0 : 1;
+				ClassGame::EndOfTurn();
 				break;
 			}
 		}
@@ -345,7 +350,7 @@ void Chess::GeneratePawnMoves(std::vector<Move>& moves, const std::string& state
 	int forward = color == 'W' ? -1 : 1;
 	if (row + forward >= 0 && row + forward < ChessBoard::Size && ::pieceNotation(state, row + forward, col) == '0') {
 		addMoveIfValid(moves, state, row, col, row + forward, col);
-		if ((row == 1 && ::pieceNotation(state, row + forward * 2, col) == '0') || (row == 6 && ::pieceNotation(state, row + forward * 2, col) == '0')) {
+		if ((row == 1 && color == 'B' && ::pieceNotation(state, row + forward * 2, col) == '0') || (row == 6 && color == 'W' && ::pieceNotation(state, row + forward * 2, col) == '0')) {
 			addMoveIfValid(moves, state, row, col, row + forward * 2, col);
 		}
 	}
@@ -662,15 +667,20 @@ void Chess::setStateString(const std::string& s) {
 	for (auto move : _moves) LOG("{} to {}", LogLevel::INFO, move.from, move.to);
 	_gameOptions.currentTurnNo = currentPlayer == 'W' ? 0 : 1;
 	if (_moves.empty()) {
+		m_GameOver = true;
 		// game has entered terminal state, it is either a stalemate or a draw now.
 		auto moves = GenerateMoves(stateString(), _gameOptions.currentTurnNo & 1 ? 'W' : 'B', true);
 		// if the other player can capture the king, it is checkmate
+		auto state = stateString();
+		state.erase(std::remove(state.begin(), state.end(), '\n'), state.end());
 		for (auto& move : moves) {
 			auto index = notationToIndex(move.to);
-			if (m_Board[index].gameTag() == 'K' || m_Board[index].gameTag() == 'k') {
+			auto bit2 = m_Board[stupid_board_indexing(index)].bit();
+			if (!bit2) continue;
+			if (bit2->gameTag() == 'K' || bit2->gameTag() == 'k') {
 				// checkmate
-				m_GameOver = true;
 				m_WinningPlayer = _gameOptions.currentTurnNo & 1 ? 0 : 1;
+				ClassGame::EndOfTurn();
 				break;
 			}
 		}
@@ -688,8 +698,15 @@ void Chess::updateAI() {
 		auto state = copyState;
 		int srcSquare = notationToIndex(move.from);
 		int dstSquare = notationToIndex(move.to);
-		state[(dstSquare % 8 * 8) + (dstSquare / 8)] = state[(srcSquare % 8 * 8) + (srcSquare / 8)];
-		state[(srcSquare % 8 * 8) + (srcSquare / 8)] = '0';
+		auto dstSquareIndex = stupid_board_indexing(dstSquare);
+		auto srcSquareIndex = stupid_board_indexing(srcSquare);
+		state[dstSquareIndex] = state[srcSquareIndex];
+		state[srcSquareIndex] = '0';
+		if (dstSquareIndex < 8 && state[dstSquareIndex] == 'p') // Black pawn promotion
+			state[dstSquareIndex] = 'q';
+		if (dstSquareIndex > 55 && state[dstSquareIndex] == 'P') { // White pawn promotion
+			state[dstSquareIndex] = 'Q';
+		}
 		int bestValue = -negamax(state, 3, -99'999, 99'999, 1); // replace with negamax call
 		LOG("Value {}", LogLevel::INFO, bestValue);
 		if (bestValue > bestMoveValue) {
@@ -711,14 +728,15 @@ void Chess::updateAI() {
 	} else {
 		LOG("No legal move found", LogLevel::INFO);
 		// game has entered terminal state, it is either a stalemate or a draw now.
-		auto moves = GenerateMoves(stateString(), 'W', true);
+		auto moves = GenerateMoves(stateString(), _gameOptions.currentTurnNo & 1 ? 'W' : 'B', true);
 		// if the other player can capture the king, it is checkmate
 		for (auto& move : moves) {
-			auto index = stupid_board_indexing(notationToIndex(move.to));
-			LOG("{} {} {}", LogLevel::INFO, move.to, index, m_Board[index].gameTag());
-			if (copyState[index] == 'K' || copyState[index] == 'k') {
+			m_GameOver = true;
+			auto index = notationToIndex(move.to);
+			auto bit2 = m_Board[stupid_board_indexing(index)].bit();
+			if (!bit2) continue;
+			if (bit2->gameTag() == 'K' || bit2->gameTag() == 'k') {
 				// checkmate
-				m_GameOver = true;
 				m_WinningPlayer = _gameOptions.currentTurnNo & 1 ? 0 : 1;
 				ClassGame::EndOfTurn();
 				break;
@@ -800,9 +818,9 @@ int Chess::negamax(std::string state, int depth, int alpha, int beta, int color)
 		auto srcSquareIndex = stupid_board_indexing(srcSquare);
 		copiedState[dstSquareIndex] = copiedState[srcSquareIndex];
 		copiedState[srcSquareIndex] = '0';
-		if (dstSquare % 8 == 0 && copiedState[dstSquareIndex] == 'p') // Black pawn promotion
+		if (dstSquareIndex < 8 && copiedState[dstSquareIndex] == 'p') // Black pawn promotion
 			copiedState[dstSquareIndex] = 'q';
-		if (dstSquare % 8 == 7 && copiedState[dstSquareIndex] == 'P') { // White pawn promotion
+		if (dstSquareIndex > 55 && copiedState[dstSquareIndex] == 'P') { // White pawn promotion
 			copiedState[dstSquareIndex] = 'Q';
 		}
 		bestValue = std::max(bestValue, -negamax(copiedState, depth - 1, -beta, -alpha, -color));
